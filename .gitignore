@@ -3,3 +3,5 @@ node_modules/
 *.vsix
 .vscode-test/
 .DS_Store
+DEV_NOTES.md
+*.dev.md

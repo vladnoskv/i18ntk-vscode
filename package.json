@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/vladnoskv/i18ntk"
+    "url": "https://github.com/vladnoskv/i18ntk-vscode"
   },
   "engines": {
     "vscode": "^1.90.0",
