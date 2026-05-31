@@ -65,6 +65,9 @@ test('renderReportHtml exposes actionable webview controls and issue sections', 
   assert.equal(html.includes('data-command="analyzeUsage"'), true);
   assert.equal(html.includes('data-command="autoTranslate"'), true);
   assert.equal(html.includes('data-command="openSettings"'), true);
+  assert.equal(html.includes('id="issueFilter"'), true);
+  assert.equal(html.includes('data-command="copyIssue"'), true);
+  assert.equal(html.includes('data-issue-text="Missing key checkout.title in fr"'), true);
   assert.equal(html.includes('Invalid Key Names'), true);
   assert.equal(html.includes('Add Key'), true);
   assert.equal(html.includes('data-key="checkout.title"'), true);

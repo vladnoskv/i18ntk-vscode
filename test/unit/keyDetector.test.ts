@@ -36,3 +36,15 @@ test('findTranslationKeys detects configured custom wrappers', () => {
 
   assert.deepEqual(keys, ['dashboard.title']);
 });
+
+test('findTranslationKeys detects imported locale object property reads', () => {
+  const source = [
+    'import common from "../locales/en/common.json";',
+    'const save = common.save;',
+    'const retry = common.actions.retry;'
+  ].join('\n');
+
+  const keys = findTranslationKeys(source).map((item) => item.key);
+
+  assert.deepEqual(keys, ['common.save', 'common.actions.retry']);
+});

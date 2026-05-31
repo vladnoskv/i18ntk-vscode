@@ -25,6 +25,10 @@ export function renderReportHtml(report: I18nReport, nonce: string): string {
     .metric.error strong { color: var(--vscode-errorForeground); }
     .metric.warn strong { color: var(--vscode-editorWarning-foreground); }
     .summary { margin: 16px 0; padding: 12px; border-left: 3px solid var(--vscode-focusBorder); background: var(--vscode-sideBar-background); }
+    .issue-tools { display: grid; grid-template-columns: minmax(180px, 320px) auto; align-items: end; gap: 10px; margin: 18px 0 8px; }
+    .issue-tools label { display: grid; gap: 5px; font-weight: 600; }
+    .issue-tools input { width: 100%; padding: 7px 8px; border: 1px solid var(--vscode-input-border); background: var(--vscode-input-background); color: var(--vscode-input-foreground); border-radius: 3px; }
+    .status { color: var(--vscode-descriptionForeground); min-height: 18px; }
     .table-wrap { overflow-x: auto; }
     table { border-collapse: collapse; width: 100%; min-width: 620px; margin-bottom: 12px; }
     th, td { border-bottom: 1px solid var(--vscode-panel-border); padding: 8px; text-align: left; vertical-align: top; }
@@ -68,12 +72,16 @@ export function renderReportHtml(report: I18nReport, nonce: string): string {
   <div class="summary">
     Use this report to move from diagnosis to action: validate before release, add missing keys, open affected files, and run Auto Translate for target locale files when the local i18ntk CLI is available.
   </div>
-  ${table('Missing Keys', ['Locale', 'Key', 'Source File', 'Actions'], result.missingKeys.slice(0, 200).map((item) => [item.locale, item.key, item.sourceFilePath || '-', actions(item.sourceFilePath, item.key, true)]), result.missingKeys.length)}
-  ${table('Placeholder Mismatches', ['Locale', 'Key', 'Missing', 'Extra', 'File', 'Actions'], result.placeholderMismatches.slice(0, 200).map((item) => [item.locale, item.key, item.missing.join(', '), item.extra.join(', '), item.filePath || '-', actions(item.filePath)]), result.placeholderMismatches.length)}
-  ${table('Unused Keys', ['Key', 'Confidence', 'File', 'Actions'], result.unusedKeys.slice(0, 200).map((item) => [item.key, `${Math.round(item.confidence * 100)}%`, item.filePath || '-', actions(item.filePath)]), result.unusedKeys.length)}
-  ${table('Invalid Key Names', ['Key', 'Expected Style', 'File', 'Actions'], result.invalidKeyNames.slice(0, 200).map((item) => [item.key, item.expectedStyle, item.filePath || '-', actions(item.filePath)]), result.invalidKeyNames.length)}
-  ${table('Risky Content', ['Locale', 'Key', 'Issue', 'File', 'Actions'], result.riskyContent.slice(0, 200).map((item) => [item.locale, item.key, item.message, item.filePath || '-', actions(item.filePath)]), result.riskyContent.length)}
-  ${table('Expansion Risks', ['Locale', 'Key', 'Expansion', 'File', 'Actions'], result.expansionRisks.slice(0, 200).map((item) => [item.locale, item.key, `+${item.expansionPercent}% (${item.sourceLength} -> ${item.targetLength})`, item.filePath || '-', actions(item.filePath)]), result.expansionRisks.length)}
+  <section class="issue-tools">
+    <label for="issueFilter">Find issues<input id="issueFilter" type="search" placeholder="Filter by key, locale, file, or issue type"></label>
+    <div id="status" class="status" aria-live="polite"></div>
+  </section>
+  ${table('Missing Keys', ['Locale', 'Key', 'Source File', 'Actions'], result.missingKeys.slice(0, 200).map((item) => [item.locale, item.key, item.sourceFilePath || '-', actions(item.sourceFilePath, item.key, true, `Missing key ${item.key} in ${item.locale}`)]), result.missingKeys.length)}
+  ${table('Placeholder Mismatches', ['Locale', 'Key', 'Missing', 'Extra', 'File', 'Actions'], result.placeholderMismatches.slice(0, 200).map((item) => [item.locale, item.key, item.missing.join(', '), item.extra.join(', '), item.filePath || '-', actions(item.filePath, undefined, false, `Placeholder mismatch ${item.key} in ${item.locale}`)]), result.placeholderMismatches.length)}
+  ${table('Unused Keys', ['Key', 'Confidence', 'File', 'Actions'], result.unusedKeys.slice(0, 200).map((item) => [item.key, `${Math.round(item.confidence * 100)}%`, item.filePath || '-', actions(item.filePath, undefined, false, `Unused key ${item.key}`)]), result.unusedKeys.length)}
+  ${table('Invalid Key Names', ['Key', 'Expected Style', 'File', 'Actions'], result.invalidKeyNames.slice(0, 200).map((item) => [item.key, item.expectedStyle, item.filePath || '-', actions(item.filePath, undefined, false, `Invalid key name ${item.key}; expected ${item.expectedStyle}`)]), result.invalidKeyNames.length)}
+  ${table('Risky Content', ['Locale', 'Key', 'Issue', 'File', 'Actions'], result.riskyContent.slice(0, 200).map((item) => [item.locale, item.key, item.message, item.filePath || '-', actions(item.filePath, undefined, false, `Risky content ${item.key} in ${item.locale}: ${item.message}`)]), result.riskyContent.length)}
+  ${table('Expansion Risks', ['Locale', 'Key', 'Expansion', 'File', 'Actions'], result.expansionRisks.slice(0, 200).map((item) => [item.locale, item.key, `+${item.expansionPercent}% (${item.sourceLength} -> ${item.targetLength})`, item.filePath || '-', actions(item.filePath, undefined, false, `Expansion risk ${item.key} in ${item.locale}: +${item.expansionPercent}%`)]), result.expansionRisks.length)}
   <h2>Suggested Next Actions</h2>
   <ul>
     <li>Add missing keys for target locales.</li>
@@ -92,7 +100,20 @@ export function renderReportHtml(report: I18nReport, nonce: string): string {
       const message = { command };
       if (button.dataset.filePath) message.filePath = button.dataset.filePath;
       if (button.dataset.key) message.key = button.dataset.key;
+      if (button.dataset.issueText) message.issueText = button.dataset.issueText;
       vsc.postMessage(message);
+    });
+    const filter = document.getElementById('issueFilter');
+    const status = document.getElementById('status');
+    filter.addEventListener('input', () => {
+      const query = filter.value.trim().toLowerCase();
+      let visible = 0;
+      for (const row of document.querySelectorAll('tr[data-issue-row]')) {
+        const show = !query || row.textContent.toLowerCase().includes(query);
+        row.hidden = !show;
+        if (show) visible += 1;
+      }
+      status.textContent = query ? visible + ' matching issue' + (visible === 1 ? '' : 's') : '';
     });
   </script>
 </body>
@@ -108,15 +129,18 @@ function table(title: string, headers: string[], rows: string[][], total: number
   const shown = rows.length;
   const more = total > shown ? ` <span style="color:var(--vscode-descriptionForeground);">(showing ${shown} of ${total})</span>` : '';
   const body = rows.length
-    ? rows.map((row) => `<tr>${row.map((cell, index) => `<td${headers[index] === 'Actions' ? ' class="actions-cell"' : ''}>${headers[index] === 'Actions' ? cell : escapeHtml(cell)}</td>`).join('')}</tr>`).join('')
+    ? rows.map((row) => `<tr data-issue-row="true">${row.map((cell, index) => `<td${headers[index] === 'Actions' ? ' class="actions-cell"' : ''}>${headers[index] === 'Actions' ? cell : escapeHtml(cell)}</td>`).join('')}</tr>`).join('')
     : `<tr><td colspan="${headers.length}" class="empty">None</td></tr>`;
   return `<h2>${escapeHtml(title)}${more}</h2><div class="table-wrap"><table><thead><tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
-function actions(filePath?: string, key?: string, canAddKey = false): string {
+function actions(filePath?: string, key?: string, canAddKey = false, issueText?: string): string {
   const buttons: string[] = [];
   if (filePath) {
     buttons.push(`<button class="secondary" data-command="openFile" data-file-path="${escapeAttr(filePath)}">Open File</button>`);
+  }
+  if (issueText) {
+    buttons.push(`<button class="secondary" data-command="copyIssue" data-issue-text="${escapeAttr(issueText)}">Copy Issue</button>`);
   }
   if (canAddKey && key) {
     buttons.push(`<button class="secondary" data-command="addMissingKey" data-key="${escapeAttr(key)}">Add Key</button>`);

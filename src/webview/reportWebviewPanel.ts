@@ -32,6 +32,12 @@ export class ReportWebviewPanel {
               vscode.window.showInformationMessage('Report markdown copied to clipboard.');
             }
             break;
+          case 'copyIssue':
+            if (message.issueText) {
+              await vscode.env.clipboard.writeText(message.issueText);
+              vscode.window.showInformationMessage('Issue copied to clipboard.');
+            }
+            break;
           case 'saveReport':
             if (this.currentReport) {
               await this.saveReportToFile(this.currentReport);

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.2 - 2026-05-31
+
+- Added issue filtering and per-issue copy actions to the Workbench report webview.
+- Added source detection for imported locale JSON object reads such as `common.save`.
+- Reduced false positives by reporting target-missing keys from scanned source usage instead of every unused source-locale key.
+- Bumped package metadata for the 1.0.2 VSIX update.
+
 ## 1.0.0 - 2026-05-31
 
 - First Marketplace-ready release.

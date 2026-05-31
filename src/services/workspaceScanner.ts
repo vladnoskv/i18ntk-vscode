@@ -36,7 +36,7 @@ export class WorkspaceScanner {
     const sourceValues = keyValues[config.sourceLocale] ?? {};
     const sourceFiles = await findFiles(rootPath, SOURCE_EXTENSIONS, config.exclude, config.maxScanFiles);
     if (token?.isCancellationRequested) throw new (require('vscode') as any).CancellationError();
-    const sourceUsages = await this.scanSourceUsages(sourceFiles, config.customWrappers, token);
+    const sourceUsages = await this.scanSourceUsages(sourceFiles, config.customWrappers, keyValues, locales, token);
     if (token?.isCancellationRequested) throw new (require('vscode') as any).CancellationError();
     const usedKeys = new Set(sourceUsages.map((usage) => usage.key));
     const allLocaleKeys = new Set<string>();
@@ -75,7 +75,13 @@ export class WorkspaceScanner {
     };
   }
 
-  private async scanSourceUsages(files: string[], customWrappers: string[], token?: { isCancellationRequested: boolean }): Promise<TranslationKeyUsage[]> {
+  private async scanSourceUsages(
+    files: string[],
+    customWrappers: string[],
+    keyValues: Record<string, Record<string, string>>,
+    locales: string[],
+    token?: { isCancellationRequested: boolean }
+  ): Promise<TranslationKeyUsage[]> {
     const usages: TranslationKeyUsage[] = [];
     for (const filePath of files) {
       if (token?.isCancellationRequested) break;
@@ -86,10 +92,19 @@ export class WorkspaceScanner {
         continue;
       }
       for (const match of findTranslationKeys(content, customWrappers)) {
-        usages.push({ key: match.key, filePath, range: match.range });
+        const keys = this.selectUsageKeys(match, keyValues, locales);
+        for (const key of keys) {
+          usages.push({ key, filePath, range: match.range });
+        }
       }
     }
     return usages;
+  }
+
+  private selectUsageKeys(match: { key: string; resolvedKeys?: string[] }, keyValues: Record<string, Record<string, string>>, locales: string[]): string[] {
+    const candidates = [match.key, ...(match.resolvedKeys ?? [])];
+    const known = candidates.filter((key) => locales.some((locale) => keyValues[locale]?.[key] !== undefined));
+    return [...new Set(known.length ? known : candidates)];
   }
 
   private collectMissingKeys(
@@ -104,7 +119,7 @@ export class WorkspaceScanner {
     usages.forEach((usage) => {
       usageByKey.set(usage.key, [...(usageByKey.get(usage.key) ?? []), usage]);
     });
-    const keysToCheck = new Set([...Object.keys(keyValues[config.sourceLocale] ?? {}), ...usageByKey.keys()]);
+    const keysToCheck = new Set(usageByKey.keys());
     for (const key of keysToCheck) {
       for (const locale of locales) {
         if (!keyValues[locale] || keyValues[locale][key] === undefined) {

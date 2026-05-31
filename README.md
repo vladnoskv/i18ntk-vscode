@@ -12,6 +12,12 @@ i18ntk Workbench gives i18n projects a focused VS Code control center: scan loca
 
 It is the full VS Code companion to the zero-dependency `i18ntk` npm package. Workbench owns the i18ntk Activity Bar sidebar; when i18ntk Lens is installed too, Lens stays inline-only with hovers, CodeLens, diagnostics, commands, and settings.
 
+## Latest in 1.0.2
+
+- Report webviews now include issue filtering and per-issue copy buttons.
+- Source scans recognize imported locale JSON objects such as `import common from "../locales/en/common.json"; common.save`.
+- Missing-key checks focus on keys used by source files, reducing duplicate noise from unused source-locale keys.
+
 ## i18ntk CLI Companion
 
 The main `i18ntk` npm package provides the command-line workflow behind the extension:
@@ -55,7 +61,7 @@ Requirements:
 - **Diagnostics**: missing keys, placeholder mismatches, invalid key names, unused keys, risky content, and expansion warnings.
 - **Hover translations**: shows locale values for `t("key")`, `i18n.t(...)`, `translate(...)`, `$t(...)`, and configured custom wrappers.
 - **Quick Fix: Add missing key**: inserts missing keys into JSON locale files while preserving formatting.
-- **Summary report**: validate, analyze usage, Auto Translate, open files, add keys, copy Markdown, save reports, and open settings.
+- **Summary report**: validate, analyze usage, Auto Translate, filter issues, copy individual issues, open files, add keys, copy Markdown, save reports, and open settings.
 - **CLI-backed Auto Translate**: runs local `i18ntk-translate` with non-interactive, placeholder-safe defaults.
 - **Local-first behavior**: no telemetry; provider network calls happen only when you explicitly run Auto Translate.
 
