@@ -5,6 +5,7 @@ export interface LocaleHealthTreeNode {
   tooltip?: string;
   contextValue?: string;
   icon?: string;
+  expanded?: boolean;
   command?: {
     command: string;
     title: string;

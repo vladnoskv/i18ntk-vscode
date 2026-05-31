@@ -1,10 +1,15 @@
 # i18ntk Workbench
 
+![i18ntk Workbench icon](media/icon.png)
+
 Interactive localization workbench for i18ntk projects: quality control, diagnostics, reports, settings, key management, and CLI-backed Auto Translate inside VS Code.
+
+i18ntk Workbench is a VS Code extension powered by the local i18ntk toolkit and released under the MIT license.
 
 ## Features
 
-- **Locale Health sidebar**: project health score, missing keys by locale, placeholder mismatches, unused keys, expansion risks, and reports.
+- **Advanced Locale Health sidebar**: visible scan, refresh, report, and settings actions plus in-tree Actions, Setup, Reports, and Settings sections.
+- **Guided locale setup**: auto-detects common and nested locale roots, prompts when none are found, and lets you choose the locale directory from VS Code.
 - **Diagnostics**: missing keys, placeholder mismatches, invalid key names, unused keys, risky content, and expansion warnings in your editor.
 - **Hover translations**: see every locale value for `t("key")`, `i18n.t(...)`, `translate(...)`, and `$t(...)`.
 - **Quick Fix: Add missing key**: insert a missing translation into locale JSON files while preserving formatting.
@@ -17,9 +22,32 @@ Interactive localization workbench for i18ntk projects: quality control, diagnos
 
 1. Open a project with locale files, such as `locales/en/common.json` and `locales/fr/common.json`.
 2. Run `i18ntk: Scan Workspace` from the Command Palette.
-3. Open the i18ntk Workbench sidebar to inspect health and issue groups.
-4. Open `i18ntk: Open Summary Report` to validate, inspect issues, open files, add missing keys, or run Auto Translate.
-5. Open `i18ntk: Open Settings` to tune scanning, diagnostics, wrappers, exclusions, and Auto Translate defaults.
+3. If Workbench cannot find locale JSON files, choose the locale directory when prompted or open `i18ntk: Choose Locale Directory`.
+4. Open the i18ntk Workbench sidebar to inspect health, issue groups, setup state, reports, and workflow actions.
+5. Open `i18ntk: Open Summary Report` to validate, inspect issues, open files, add missing keys, or run Auto Translate.
+6. Open `i18ntk: Open Settings` to tune scanning, diagnostics, wrappers, exclusions, locale discovery, and Auto Translate defaults.
+
+## Workbench Sidebar
+
+The extension uses the same red i18ntk icon everywhere it appears in VS Code and Marketplace surfaces:
+
+```text
+media/icon.png
+```
+
+The Locale Health view keeps primary controls visible in the view title:
+
+- Scan Workspace
+- Refresh Locale Health
+- Open Summary Report
+- Open Settings
+
+The tree also exposes workflow sections so common actions are not hidden in the overflow menu:
+
+- **Actions**: scan, validate, analyze usage, Auto Translate, add missing key.
+- **Setup**: current locale root, detection status, detected file count, choose/detect locale directory.
+- **Reports**: summary report and project summary.
+- **Settings**: Workbench settings, native VS Code settings, locale setup actions.
 
 ## Commands
 
@@ -35,6 +63,8 @@ Interactive localization workbench for i18ntk projects: quality control, diagnos
 | `i18ntk: Open Key in Locale Files` | Opens locale files containing a specific key. |
 | `i18ntk: Open Settings` | Opens the Workbench settings webview. |
 | `i18ntk: Open Native Settings` | Opens VS Code's native settings UI filtered to i18ntk. |
+| `i18ntk: Choose Locale Directory` | Opens a folder picker and saves the selected locale root for this workspace. |
+| `i18ntk: Detect Locale Directory` | Searches common and nested project paths for JSON locale files and saves the detected root. |
 
 ## Settings
 
@@ -75,6 +105,8 @@ For flat `locales/en.json` layouts, use scanning, validation, reports, and Add M
 ## Supported Layouts
 
 Auto-detection checks `locales/`, `locale/`, `i18n/`, `translations/`, `public/locales/`, and `src/locales/`.
+
+If none of those contain JSON locale files, Workbench searches nested project folders for `locales`, `locale`, `i18n`, `translations`, and `public/locales` roots. If no usable root is found, the first scan opens a setup prompt instead of silently reporting an empty project.
 
 Directory-per-locale:
 

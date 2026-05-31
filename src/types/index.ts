@@ -8,6 +8,10 @@ export interface TextRange {
 export interface ResolvedI18ntkConfig {
   rootPath: string;
   localeDirectory: string;
+  localeDirectorySource?: 'configured' | 'auto-detected' | 'fallback';
+  localeDirectoryFound?: boolean;
+  localeDirectoryRelativePath?: string;
+  localeFileCount?: number;
   sourceLocale: string;
   keyStyle: 'dot' | 'snake' | 'camel' | 'kebab' | 'flat';
   autoScanOnSave: boolean;
@@ -87,6 +91,10 @@ export interface I18nScanResult {
   rootPath: string;
   sourceLocale: string;
   localeDirectory: string;
+  localeDirectorySource?: 'configured' | 'auto-detected' | 'fallback';
+  localeDirectoryFound?: boolean;
+  localeDirectoryRelativePath?: string;
+  localeFileCount?: number;
   scannedAt: string;
   locales: string[];
   totalKeys: number;

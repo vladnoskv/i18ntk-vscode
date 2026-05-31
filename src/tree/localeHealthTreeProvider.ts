@@ -19,7 +19,9 @@ export class LocaleHealthTreeProvider {
   getTreeItem(element: LocaleHealthTreeNode): any {
     const item = new vscode.TreeItem(
       element.label,
-      element.children && element.children.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None
+      element.children && element.children.length > 0
+        ? element.expanded ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed
+        : vscode.TreeItemCollapsibleState.None
     );
     item.id = element.id;
     item.description = element.description;
@@ -35,10 +37,17 @@ export class LocaleHealthTreeProvider {
     if (!this.result) {
       return [
         {
-          id: 'empty',
-          label: 'Run workspace scan',
-          icon: 'search',
-          command: { command: 'i18ntk.scanWorkspace', title: 'Scan Workspace' }
+          id: 'setup',
+          label: 'Setup',
+          icon: 'tools',
+          expanded: true,
+          contextValue: 'i18ntk.setup',
+          children: [
+            action('scan-empty', 'Scan Workspace', 'search', 'i18ntk.scanWorkspace'),
+            action('choose-locale-directory-empty', 'Choose Locale Directory', 'folder-opened', 'i18ntk.chooseLocaleDirectory', [{ rescan: true }]),
+            action('detect-locale-directory-empty', 'Detect Locale Directory', 'search', 'i18ntk.detectLocaleDirectory', [{ rescan: true }]),
+            action('open-settings-empty', 'Open Settings', 'settings-gear', 'i18ntk.openSettings')
+          ]
         }
       ];
     }
@@ -49,14 +58,45 @@ export class LocaleHealthTreeProvider {
 function buildTree(result: I18nScanResult): LocaleHealthTreeNode[] {
   return [
     {
+      id: 'actions',
+      label: 'Actions',
+      icon: 'run-all',
+      expanded: true,
+      contextValue: 'i18ntk.actions',
+      children: [
+        action('scan', 'Scan Workspace', 'search', 'i18ntk.scanWorkspace'),
+        action('validate', 'Validate Locales', 'pass', 'i18ntk.validateLocales'),
+        action('analyze', 'Analyze Usage', 'graph', 'i18ntk.analyzeUsage'),
+        action('translate', 'Auto Translate Missing', 'globe', 'i18ntk.autoTranslateMissing'),
+        action('add-key', 'Add Missing Key', 'add', 'i18ntk.addMissingKey')
+      ]
+    },
+    {
       id: 'project-health',
       label: 'Project Health',
       icon: 'pulse',
+      expanded: true,
       children: [
         stat('source-locale', 'Source Locale', result.sourceLocale),
+        stat('locale-directory', 'Locale Directory', result.localeDirectoryRelativePath ?? result.localeDirectory),
+        stat('locale-detection', 'Detection', detectionDescription(result)),
         stat('locale-count', 'Locales', String(result.locales.length)),
         stat('total-keys', 'Total Keys', String(result.totalKeys)),
         stat('health-score', 'Health Score', `${result.healthScore}%`)
+      ]
+    },
+    {
+      id: 'setup',
+      label: 'Setup',
+      icon: result.localeDirectoryFound === false || result.localeFiles.length === 0 ? 'warning' : 'tools',
+      expanded: result.localeDirectoryFound === false || result.localeFiles.length === 0,
+      contextValue: 'i18ntk.setup',
+      children: [
+        stat('setup-locale-root', 'Locale Root', result.localeDirectoryRelativePath ?? result.localeDirectory),
+        stat('setup-locale-files', 'Locale Files', String(result.localeFileCount ?? result.localeFiles.length)),
+        action('choose-locale-directory', 'Choose Locale Directory', 'folder-opened', 'i18ntk.chooseLocaleDirectory', [{ rescan: true }]),
+        action('detect-locale-directory', 'Detect Locale Directory', 'search', 'i18ntk.detectLocaleDirectory', [{ rescan: true }]),
+        action('open-settings-setup', 'Open Workbench Settings', 'settings-gear', 'i18ntk.openSettings')
       ]
     },
     groupByLocale('missing', 'Missing Keys', 'warning', result.missingKeys.map((item) => ({
@@ -91,20 +131,45 @@ function buildTree(result: I18nScanResult): LocaleHealthTreeNode[] {
       id: 'reports',
       label: 'Reports',
       icon: 'preview',
+      contextValue: 'i18ntk.reports',
       children: [
-        {
-          id: 'open-report',
-          label: 'Open Summary Report',
-          icon: 'file',
-          command: { command: 'i18ntk.openReport', title: 'Open Summary Report' }
-        }
+        action('open-report', 'Open Summary Report', 'file', 'i18ntk.openReport'),
+        action('show-summary', 'Show Summary', 'list-tree', 'i18ntk.showSummary')
+      ]
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: 'settings-gear',
+      contextValue: 'i18ntk.settings',
+      children: [
+        action('open-settings', 'Open Workbench Settings', 'settings-gear', 'i18ntk.openSettings'),
+        action('open-native-settings', 'Open Native Settings', 'gear', 'i18ntk.openNativeSettings'),
+        action('choose-locale-directory-settings', 'Choose Locale Directory', 'folder-opened', 'i18ntk.chooseLocaleDirectory', [{ rescan: true }]),
+        action('detect-locale-directory-settings', 'Detect Locale Directory', 'search', 'i18ntk.detectLocaleDirectory', [{ rescan: true }])
       ]
     }
   ];
 }
 
 function stat(id: string, label: string, description: string): LocaleHealthTreeNode {
-  return { id, label, description, icon: 'info' };
+  return { id, label, description, icon: 'info', contextValue: 'i18ntk.stat' };
+}
+
+function action(id: string, label: string, icon: string, command: string, args: unknown[] = []): LocaleHealthTreeNode {
+  return {
+    id,
+    label,
+    icon,
+    contextValue: 'i18ntk.action',
+    command: { command, title: label, arguments: args }
+  };
+}
+
+function detectionDescription(result: I18nScanResult): string {
+  if (result.localeDirectorySource === 'configured') return result.localeDirectoryFound === false ? 'Configured, no files found' : 'Configured';
+  if (result.localeDirectorySource === 'auto-detected') return 'Auto-detected';
+  return 'Not found';
 }
 
 function groupByLocale(id: string, label: string, icon: string, items: Array<{ locale: string; label: string; description?: string; command?: any }>): LocaleHealthTreeNode {

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { MissingKeyCodeActionProvider } from './codeActions/missingKeyCodeActionProvider';
 import { registerAddMissingKeyCommand } from './commands/addMissingKeyCommand';
 import { registerAutoTranslateCommand } from './commands/autoTranslateCommand';
+import { registerConfigureLocaleDirectoryCommands } from './commands/configureLocaleDirectoryCommand';
 import { registerOpenReportCommand } from './commands/openReportCommand';
 import { openKeyInLocaleFilesCommand } from './commands/openKeyInLocaleFilesCommand';
 import { registerRefreshTreeCommand } from './commands/refreshTreeCommand';
@@ -47,6 +48,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerOpenReportCommand(context, state, reportPanel);
   registerAddMissingKeyCommand(context, state);
   registerAutoTranslateCommand(context, state, logger);
+  registerConfigureLocaleDirectoryCommands(context, logger);
   context.subscriptions.push(vscode.commands.registerCommand('i18ntk.openKeyInLocaleFiles', (key?: string) => openKeyInLocaleFilesCommand(keyUsage, key)));
   context.subscriptions.push(vscode.commands.registerCommand('i18ntk.openSettings', () => {
     WorkbenchSettingsPanel.open(context);

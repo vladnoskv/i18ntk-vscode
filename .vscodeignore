@@ -5,6 +5,7 @@ src/**
 test/**
 out/test/**
 **/*.map
+media/*.svg
 tsconfig.json
 package-lock.json
 *.vsix

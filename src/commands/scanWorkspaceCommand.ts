@@ -38,6 +38,22 @@ export async function scanWorkspaceCommand(
       progress.report({ message: 'Scanning locale files...' });
       const result = await adapter.scanWorkspace(rootPath, config, token);
       if (token.isCancellationRequested) return;
+      if (!config.localeDirectoryFound || result.localeFiles.length === 0) {
+        const action = await vscode.window.showWarningMessage(
+          'i18ntk did not find JSON locale files for this workspace. Choose the locale directory to finish setup.',
+          'Choose Locale Folder',
+          'Open Settings',
+          'Keep Empty Result'
+        );
+        if (action === 'Choose Locale Folder') {
+          await vscode.commands.executeCommand('i18ntk.chooseLocaleDirectory', { rescan: true, silent: true });
+          return;
+        }
+        if (action === 'Open Settings') {
+          await vscode.commands.executeCommand('i18ntk.openSettings');
+          return;
+        }
+      }
       progress.report({ message: 'Generating report...' });
       const report = await adapter.generateReport(result);
       state.result = result;

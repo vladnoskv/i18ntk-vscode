@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { detectLocaleDirectory, resolveConfiguredLocaleDirectory } from '../config/localeDiscovery';
 
 export class WorkbenchSettingsPanel {
   private static panel: vscode.WebviewPanel | undefined;
@@ -17,14 +18,30 @@ export class WorkbenchSettingsPanel {
     this.panel = panel;
     panel.onDidDispose(() => { this.panel = undefined; }, null, context.subscriptions);
     panel.webview.onDidReceiveMessage((message: any) => this.handleMessage(message), null, context.subscriptions);
-    panel.webview.html = this.getHtml();
+    panel.webview.html = this.getLoadingHtml();
+    void this.render();
   }
 
-  private static getHtml(): string {
+  private static async render(): Promise<void> {
+    if (this.panel) this.panel.webview.html = await this.getHtml();
+  }
+
+  private static getLoadingHtml(): string {
+    return `<!DOCTYPE html><html lang="en"><body>Loading i18ntk Workbench settings...</body></html>`;
+  }
+
+  private static async getHtml(): Promise<string> {
     const config = vscode.workspace.getConfiguration('i18ntk');
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    const configuredLocaleDirectory = config.get('localeDirectory', '');
+    const discovery = folder
+      ? configuredLocaleDirectory
+        ? await resolveConfiguredLocaleDirectory(folder.uri.fsPath, configuredLocaleDirectory)
+        : await detectLocaleDirectory(folder.uri.fsPath)
+      : undefined;
     const nonce = createNonce();
     const model = {
-      localeDirectory: config.get('localeDirectory', ''),
+      localeDirectory: configuredLocaleDirectory,
       sourceLocale: config.get('sourceLocale', 'en'),
       keyStyle: config.get('keyStyle', 'dot'),
       autoScanOnSave: config.get('autoScanOnSave', false),
@@ -38,6 +55,19 @@ export class WorkbenchSettingsPanel {
       autoTranslateTargets: config.get('autoTranslateTargets', []) as string[],
       autoTranslateMode: config.get('autoTranslateMode', 'onlyMissing')
     };
+    const setupSummary = discovery
+      ? {
+          resolved: discovery.relativeLocaleDirectory,
+          status: discovery.found
+            ? discovery.source === 'configured' ? 'Configured' : 'Auto-detected'
+            : 'No locale files found',
+          detail: `${discovery.localeFileCount} JSON locale file${discovery.localeFileCount === 1 ? '' : 's'}${discovery.locales.length ? ` across ${discovery.locales.join(', ')}` : ''}`
+        }
+      : {
+          resolved: 'No workspace open',
+          status: 'Unavailable',
+          detail: 'Open a workspace to configure locale discovery.'
+        };
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -67,6 +97,9 @@ export class WorkbenchSettingsPanel {
     button:hover { background: var(--vscode-button-hoverBackground); }
     button.secondary { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
     button.secondary:hover { background: var(--vscode-button-secondaryHoverBackground); }
+    .setup { border: 1px solid var(--vscode-panel-border); border-radius: 4px; padding: 12px; margin-bottom: 18px; background: var(--vscode-sideBar-background); }
+    .setup strong { display: block; margin-bottom: 4px; }
+    .setup code { font-family: var(--vscode-editor-font-family); }
     .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
     .status { margin-top: 14px; padding: 8px; border-radius: 3px; display: none; }
     .status.ok { display: block; background: var(--vscode-testing-iconPassed); color: #fff; }
@@ -77,6 +110,15 @@ export class WorkbenchSettingsPanel {
     <h1>i18ntk Workbench Settings</h1>
     <p>Configure scanning, diagnostics, report behavior, custom wrappers, and Auto Translate for this workspace.</p>
   </header>
+  <section class="setup">
+    <strong>${escapeHtml(setupSummary.status)}</strong>
+    <p>Resolved locale directory: <code>${escapeHtml(setupSummary.resolved)}</code></p>
+    <p>${escapeHtml(setupSummary.detail)}</p>
+    <div class="actions">
+      <button id="detectLocale" class="secondary">Detect Locale Directory</button>
+      <button id="chooseLocale" class="secondary">Choose Locale Directory</button>
+    </div>
+  </section>
   <h2>Workspace</h2>
   <section class="grid">
     ${textField('localeDirectory', 'Locale Directory', model.localeDirectory, 'Leave empty to auto-detect common locale folders.')}
@@ -147,6 +189,8 @@ export class WorkbenchSettingsPanel {
     }
     document.getElementById('addExclude').addEventListener('click', () => addRow('excludeList'));
     document.getElementById('addWrapper').addEventListener('click', () => addRow('wrapperList'));
+    document.getElementById('detectLocale').addEventListener('click', () => vsc.postMessage({ command: 'detectLocaleDirectory' }));
+    document.getElementById('chooseLocale').addEventListener('click', () => vsc.postMessage({ command: 'chooseLocaleDirectory' }));
     document.addEventListener('click', (event) => {
       const button = event.target.closest('button[data-remove-row]');
       if (button) button.parentElement.remove();
@@ -177,7 +221,17 @@ export class WorkbenchSettingsPanel {
       for (const key of SETTINGS_KEYS) {
         await config.update(key, undefined, vscode.ConfigurationTarget.Workspace);
       }
-      if (this.panel) this.panel.webview.html = this.getHtml();
+      await this.render();
+      return;
+    }
+    if (message.command === 'detectLocaleDirectory') {
+      await vscode.commands.executeCommand('i18ntk.detectLocaleDirectory');
+      await this.render();
+      return;
+    }
+    if (message.command === 'chooseLocaleDirectory') {
+      await vscode.commands.executeCommand('i18ntk.chooseLocaleDirectory');
+      await this.render();
       return;
     }
     if (message.command === 'save' || message.command === 'saveAndScan') {
