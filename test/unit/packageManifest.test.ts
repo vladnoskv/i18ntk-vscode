@@ -11,6 +11,7 @@ const manifest = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package
     views?: Record<string, Array<{ id: string }>>;
   };
   scripts?: Record<string, string>;
+  devDependencies?: Record<string, string>;
 };
 
 test('manifest keeps Workbench as the single i18ntk Activity Bar owner', () => {
@@ -36,4 +37,6 @@ test('package scripts separate compile, unit tests, aggregate tests, verify, and
   assert.equal(manifest.scripts?.test, 'npm run test:compile && npm run test:unit');
   assert.equal(manifest.scripts?.verify, 'npm test && npm run package');
   assert.equal(manifest.scripts?.package, 'vsce package');
+  assert.ok(manifest.devDependencies?.['@vscode/vsce']);
+  assert.equal(manifest.devDependencies?.vsce, undefined);
 });

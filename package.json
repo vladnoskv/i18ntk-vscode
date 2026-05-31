@@ -1,7 +1,7 @@
 {
   "name": "i18ntk-workbench",
   "displayName": "i18ntk Workbench",
-  "description": "Local-first i18ntk workbench for setup, scanning, validation, usage checks, reports, key management, and CLI-backed Auto Translate.",
+  "description": "VS Code workbench for i18ntk projects: setup, scanning, validation, usage reports, key management, and CLI-backed Auto Translate.",
   "version": "1.0.1",
   "publisher": "VladNoskov",
   "license": "MIT",

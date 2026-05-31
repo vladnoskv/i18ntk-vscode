@@ -2,9 +2,25 @@
 
 ![i18ntk Workbench icon](media/icon.png)
 
-A local-first VS Code workbench for i18ntk projects: setup, scanning, validation, usage checks, diagnostics, reports, key management, and CLI-backed Auto Translate from inside the editor.
+[![VS Code Marketplace](https://img.shields.io/badge/VS_Code-i18ntk_Workbench-007ACC?logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=VladNoskov.i18ntk-workbench)
+[![npm version](https://img.shields.io/npm/v/i18ntk.svg?color=brightgreen)](https://www.npmjs.com/package/i18ntk)
+[![npm downloads](https://img.shields.io/npm/dt/i18ntk.svg)](https://www.npmjs.com/package/i18ntk)
+[![node](https://img.shields.io/badge/node-%3E%3D16-339933)](https://nodejs.org)
+[![dependencies](https://img.shields.io/badge/i18ntk_dependencies-0-success)](https://www.npmjs.com/package/i18ntk)
 
-i18ntk Workbench is the full VS Code companion to the `i18ntk` CLI. It keeps the i18ntk Activity Bar sidebar clean and central: when i18ntk Lens is installed too, Workbench remains the single sidebar icon while Lens continues to provide inline hovers, CodeLens, diagnostics, commands, and settings.
+i18ntk Workbench gives i18n projects a focused VS Code control center: scan locale health, validate translations, review usage, manage keys, open reports, and run CLI-backed Auto Translate without leaving the editor.
+
+It is the full VS Code companion to the zero-dependency `i18ntk` npm package. Workbench owns the i18ntk Activity Bar sidebar; when i18ntk Lens is installed too, Lens stays inline-only with hovers, CodeLens, diagnostics, commands, and settings.
+
+## i18ntk CLI Companion
+
+The main `i18ntk` npm package provides the command-line workflow behind the extension:
+
+- setup, scan, analyze, validate, usage, sizing, completion, summary, backup, fixer, and Auto Translate commands
+- zero runtime dependencies
+- Node.js `>=16.0.0`
+- local-first operation, with provider network calls only when you run Auto Translate
+- public npm stats and package health through the badges above
 
 ## Install
 
@@ -32,7 +48,7 @@ Requirements:
 5. Open `i18ntk: Open Summary Report` for validation, usage analysis, issue navigation, Markdown export, missing-key fixes, and Auto Translate.
 6. Open `i18ntk: Open Settings` to tune locale discovery, source locale, key style, diagnostics, wrappers, exclusions, and Auto Translate defaults.
 
-## Features
+## What You Get
 
 - **Locale Health sidebar**: scan, refresh, report, setup, settings, and action groups in one Activity Bar view.
 - **Workspace setup**: auto-detects common and nested locale roots, then prompts when setup is incomplete.
