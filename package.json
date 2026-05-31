@@ -112,6 +112,14 @@
             "type": "string"
           },
           "description": "Folder or file name fragments excluded from scans."
+        },
+        "i18ntk.customWrappers": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Custom translation wrapper function names to detect (e.g. tx, __, _t)."
         }
       }
     },
@@ -146,6 +154,36 @@
       {
         "command": "i18ntk.openSettings",
         "title": "i18ntk: Open Settings",
+        "category": "i18ntk"
+      },
+      {
+        "command": "i18ntk.validateLocales",
+        "title": "i18ntk: Validate Locales",
+        "category": "i18ntk"
+      },
+      {
+        "command": "i18ntk.analyzeUsage",
+        "title": "i18ntk: Analyze Usage",
+        "category": "i18ntk"
+      },
+      {
+        "command": "i18ntk.showSummary",
+        "title": "i18ntk: Show Summary",
+        "category": "i18ntk"
+      },
+      {
+        "command": "i18ntk.lensScan",
+        "title": "i18ntk Lens: Scan Workspace",
+        "category": "i18ntk"
+      },
+      {
+        "command": "i18ntk.lensOpenKey",
+        "title": "i18ntk Lens: Open Key in Files",
+        "category": "i18ntk"
+      },
+      {
+        "command": "i18ntk.lensOpenSettings",
+        "title": "i18ntk Lens: Open Settings",
         "category": "i18ntk"
       }
     ],

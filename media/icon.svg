@@ -1,7 +1,17 @@
-<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="128" height="128" rx="24" fill="#1F6FEB"/>
-  <path d="M24 35h80v13H24V35Z" fill="#fff"/>
-  <path d="M24 58h49v13H24V58Z" fill="#fff"/>
-  <path d="M24 81h67v13H24V81Z" fill="#fff"/>
-  <path d="M92 55l12 12-12 12-9-9-8 8-8-8 17-17 8 2Z" fill="#9BE9A8"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="128" y2="128">
+      <stop offset="0%" stop-color="#1F6FEB"/>
+      <stop offset="100%" stop-color="#0D419D"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="22" fill="url(#bg)"/>
+  <ellipse cx="64" cy="58" rx="38" ry="36" fill="none" stroke="#fff" stroke-width="3.5" stroke-dasharray="6 3" opacity="0.5"/>
+  <ellipse cx="64" cy="58" rx="38" ry="36" fill="none" stroke="#fff" stroke-width="3" opacity="0.3"/>
+  <path d="M26 58h76" stroke="#fff" stroke-width="2.5" opacity="0.35"/>
+  <path d="M64 22v72" stroke="#fff" stroke-width="2.5" opacity="0.35"/>
+  <text x="64" y="66" text-anchor="middle" font-family="system-ui, sans-serif" font-size="22" font-weight="800" fill="#fff">i18n</text>
+  <text x="64" y="104" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#9BE9A8" letter-spacing="2">TK</text>
+  <circle cx="98" cy="36" r="12" fill="#9BE9A8"/>
+  <path d="M93 36l3 6 6-4-2 7 6 1-6 2 2 6-5-3-4 5-1-6-6-1 6-4-3-6 4 3z" fill="#1F6FEB"/>
 </svg>

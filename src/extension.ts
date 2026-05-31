@@ -49,6 +49,66 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.executeCommand('workbench.action.openSettings', 'i18ntk');
   }));
 
+  context.subscriptions.push(vscode.commands.registerCommand('i18ntk.validateLocales', async () => {
+    await vscode.commands.executeCommand('i18ntk.scanWorkspace');
+    if (!state.result) return;
+    const issues: Array<{ key: string; locale?: string; message?: string }> = [...state.result.missingKeys.map((m: any) => ({ ...m, message: 'missing' })), ...state.result.placeholderMismatches.map((p: any) => ({ ...p, message: `missing ${p.missing?.join(',')}` })), ...state.result.riskyContent];
+    if (issues.length === 0) {
+      vscode.window.showInformationMessage('i18ntk: locales are clean — no missing keys, placeholder mismatches, or risky content.');
+    } else {
+      outputChannel.appendLine(`\n=== i18ntk Validation Results ===`);
+      for (const issue of issues) {
+        outputChannel.appendLine(`[${issue.locale ?? '-'}] ${issue.key}: ${issue.message ?? 'issue'}`);
+      }
+      outputChannel.appendLine(`Total issues: ${issues.length}`);
+      outputChannel.show();
+      vscode.window.showWarningMessage(`i18ntk: ${issues.length} issues found. See Output channel for details.`);
+    }
+  }));
+
+  context.subscriptions.push(vscode.commands.registerCommand('i18ntk.analyzeUsage', async () => {
+    await vscode.commands.executeCommand('i18ntk.scanWorkspace');
+    if (!state.result) return;
+    outputChannel.appendLine(`\n=== i18ntk Usage Analysis ===`);
+    outputChannel.appendLine(`Source locales: ${state.result.locales.join(', ')}`);
+    outputChannel.appendLine(`Total keys in source: ${state.result.totalKeys}`);
+    outputChannel.appendLine(`Keys used in source code: ${state.result.sourceUsages.length} unique (${new Set(state.result.sourceUsages.map((u: any) => u.key)).size} distinct)`);
+    outputChannel.appendLine(`Missing translations: ${state.result.missingKeys.length}`);
+    outputChannel.appendLine(`Unused keys: ${state.result.unusedKeys.length}`);
+    outputChannel.appendLine(`Placeholder mismatches: ${state.result.placeholderMismatches.length}`);
+    outputChannel.appendLine(`Expansion risks: ${state.result.expansionRisks.length}`);
+    outputChannel.appendLine(`Health score: ${state.result.healthScore}%`);
+    outputChannel.show();
+    vscode.window.showInformationMessage(`i18ntk usage: ${state.result.missingKeys.length} missing, ${state.result.unusedKeys.length} unused. Health: ${state.result.healthScore}%`);
+  }));
+
+  context.subscriptions.push(vscode.commands.registerCommand('i18ntk.showSummary', async () => {
+    await vscode.commands.executeCommand('i18ntk.scanWorkspace');
+    vscode.commands.executeCommand('i18ntk.openReport');
+  }));
+
+  try {
+    const lensExtension = vscode.extensions.getExtension('vladnoskv.i18ntk-lens');
+    if (lensExtension) {
+      lensExtension.activate().then(() => {
+        logger.info('i18ntk Lens detected — integrated into Workbench.');
+      }).catch(() => {
+        logger.info('i18ntk Lens activation failed.');
+      });
+      context.subscriptions.push(vscode.commands.registerCommand('i18ntk.lensScan', () => {
+        vscode.commands.executeCommand('i18ntkLens.scan');
+      }));
+      context.subscriptions.push(vscode.commands.registerCommand('i18ntk.lensOpenKey', () => {
+        vscode.commands.executeCommand('i18ntkLens.openKeyInLocaleFiles');
+      }));
+      context.subscriptions.push(vscode.commands.registerCommand('i18ntk.lensOpenSettings', () => {
+        vscode.commands.executeCommand('i18ntkLens.openSettings');
+      }));
+    }
+  } catch {
+    logger.info('i18ntk Lens not detected.');
+  }
+
   const documentSelector: vscode.DocumentSelector = [
     { scheme: 'file', language: 'typescript' },
     { scheme: 'file', language: 'typescriptreact' },
