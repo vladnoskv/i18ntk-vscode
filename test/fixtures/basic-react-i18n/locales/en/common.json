@@ -1,0 +1,16 @@
+{
+  "common": {
+    "save": "Save"
+  },
+  "checkout": {
+    "payment": {
+      "title": "Payment"
+    }
+  },
+  "cart": {
+    "items": "You have {count} items"
+  },
+  "legacy": {
+    "oldBanner": "Old banner"
+  }
+}

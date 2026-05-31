@@ -1,0 +1,203 @@
+{
+  "name": "i18ntk-workbench",
+  "displayName": "i18ntk Workbench",
+  "description": "Local-first i18n quality control, diagnostics, reports, and key management powered by i18ntk workflows.",
+  "version": "0.1.0",
+  "publisher": "vladnoskv",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vladnoskv/i18ntk"
+  },
+  "engines": {
+    "vscode": "^1.90.0",
+    "node": ">=18.0.0"
+  },
+  "categories": [
+    "Other",
+    "Linters",
+    "Formatters"
+  ],
+  "keywords": [
+    "i18ntk",
+    "i18n",
+    "localization",
+    "translation",
+    "diagnostics"
+  ],
+  "activationEvents": [
+    "onCommand:i18ntk.scanWorkspace",
+    "onCommand:i18ntk.refreshLocaleHealth",
+    "onCommand:i18ntk.openReport",
+    "onCommand:i18ntk.addMissingKey",
+    "onCommand:i18ntk.openKeyInLocaleFiles",
+    "onCommand:i18ntk.openSettings",
+    "workspaceContains:locales",
+    "workspaceContains:locale",
+    "workspaceContains:i18n",
+    "workspaceContains:translations",
+    "workspaceContains:public/locales",
+    "workspaceContains:src/locales",
+    "workspaceContains:i18ntk.config.json",
+    "workspaceContains:i18ntk.config.js",
+    "workspaceContains:i18n.config.json"
+  ],
+  "main": "./out/src/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "i18ntk Workbench",
+      "properties": {
+        "i18ntk.localeDirectory": {
+          "type": "string",
+          "default": "",
+          "description": "Locale directory. Empty means auto-detect common locale folders."
+        },
+        "i18ntk.sourceLocale": {
+          "type": "string",
+          "default": "en",
+          "description": "Source/default locale code."
+        },
+        "i18ntk.keyStyle": {
+          "type": "string",
+          "default": "dot",
+          "enum": [
+            "dot",
+            "snake",
+            "camel",
+            "kebab",
+            "flat"
+          ],
+          "description": "Expected translation key naming style."
+        },
+        "i18ntk.autoScanOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run a debounced workspace scan after source or locale files are saved."
+        },
+        "i18ntk.showInlineDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show missing key and locale diagnostics in editors."
+        },
+        "i18ntk.showHoverTranslations": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show locale values when hovering over detected translation keys."
+        },
+        "i18ntk.reportFormat": {
+          "type": "string",
+          "default": "webview",
+          "enum": [
+            "webview",
+            "markdown"
+          ],
+          "description": "Preferred report presentation."
+        },
+        "i18ntk.maxScanFiles": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 100,
+          "description": "Maximum source files to scan."
+        },
+        "i18ntk.exclude": {
+          "type": "array",
+          "default": [
+            "node_modules",
+            ".next",
+            "dist",
+            "build",
+            "coverage"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Folder or file name fragments excluded from scans."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "i18ntk.scanWorkspace",
+        "title": "i18ntk: Scan Workspace",
+        "category": "i18ntk"
+      },
+      {
+        "command": "i18ntk.refreshLocaleHealth",
+        "title": "i18ntk: Refresh Locale Health",
+        "category": "i18ntk",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "i18ntk.openReport",
+        "title": "i18ntk: Open Summary Report",
+        "category": "i18ntk",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "i18ntk.addMissingKey",
+        "title": "i18ntk: Add Missing Key",
+        "category": "i18ntk"
+      },
+      {
+        "command": "i18ntk.openKeyInLocaleFiles",
+        "title": "i18ntk: Open Key in Locale Files",
+        "category": "i18ntk"
+      },
+      {
+        "command": "i18ntk.openSettings",
+        "title": "i18ntk: Open Settings",
+        "category": "i18ntk"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "i18ntkWorkbench",
+          "title": "i18ntk Workbench",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "i18ntkWorkbench": [
+        {
+          "id": "i18ntk.localeHealth",
+          "name": "Locale Health"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "i18ntk.scanWorkspace",
+          "when": "view == i18ntk.localeHealth",
+          "group": "navigation"
+        },
+        {
+          "command": "i18ntk.refreshLocaleHealth",
+          "when": "view == i18ntk.localeHealth",
+          "group": "navigation"
+        },
+        {
+          "command": "i18ntk.openReport",
+          "when": "view == i18ntk.localeHealth",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p .",
+    "test": "npm run compile && node --test out/test/unit/*.test.js",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/test-electron": "^2.4.1",
+    "typescript": "^5.8.3",
+    "vsce": "^2.15.0"
+  },
+  "extensionDependencies": []
+}
