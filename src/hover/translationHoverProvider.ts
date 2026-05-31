@@ -14,7 +14,7 @@ export class TranslationHoverProvider {
     if (!result) return undefined;
     const content = document.getText();
     const offset = document.offsetAt(position);
-    const match = detectTranslationKeysAt(content, offset);
+    const match = detectTranslationKeysAt(content, offset, config.get('customWrappers', []));
     if (!match) return undefined;
 
     const keyUsage = new KeyUsageService(result);

@@ -19,7 +19,11 @@ test('LocalI18ntkAdapter returns normalized scan and report data', async () => {
     showHoverTranslations: true,
     reportFormat: 'webview',
     maxScanFiles: 5000,
-    exclude: ['node_modules', '.git', 'dist', 'build', 'coverage']
+    exclude: ['node_modules', '.git', 'dist', 'build', 'coverage'],
+    customWrappers: [],
+    autoTranslateProvider: 'google',
+    autoTranslateTargets: [],
+    autoTranslateMode: 'onlyMissing'
   };
 
   const result = await adapter.scanWorkspace(rootPath, config);

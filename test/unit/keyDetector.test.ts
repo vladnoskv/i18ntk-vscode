@@ -28,3 +28,11 @@ test('detectTranslationKeysAt returns the key at a character offset', () => {
 
   assert.equal(match?.key, 'checkout.payment.title');
 });
+
+test('findTranslationKeys detects configured custom wrappers', () => {
+  const source = 'const label = msg("dashboard.title");';
+
+  const keys = findTranslationKeys(source, ['msg']).map((item) => item.key);
+
+  assert.deepEqual(keys, ['dashboard.title']);
+});

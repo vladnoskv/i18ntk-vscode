@@ -1,6 +1,17 @@
 # Changelog
 
-## 0.1.0 — 2026-05-31
+## 0.2.0 - 2026-05-31
+
+- Bumped extension version to 0.2.0.
+- Added an actionable report webview with validation, usage analysis, Auto Translate, add-key, open-file, settings, copy, and save actions.
+- Added invalid key names to the report webview.
+- Added `i18ntk: Auto Translate Missing`, backed by the local `i18ntk-translate` CLI in non-interactive placeholder-safe mode.
+- Added a Workbench settings webview for scan, diagnostics, wrapper, exclusion, and Auto Translate settings.
+- Added Auto Translate settings for provider, target locales, and mode.
+- Reorganized the Locale Health view title menu into scan, quality, action, and management groups.
+- Updated user-facing README documentation for commands, settings, Auto Translate, supported layouts, and privacy.
+
+## 0.1.0 - 2026-05-31
 
 - Initial release.
 - Locale Health sidebar (Project Health, Missing Keys, Placeholder Mismatches, Unused Keys, Expansion Risks, Reports).

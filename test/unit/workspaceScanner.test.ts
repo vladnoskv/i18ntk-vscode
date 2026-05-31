@@ -18,7 +18,11 @@ test('WorkspaceScanner detects locales, usages, missing keys, and placeholder mi
     showHoverTranslations: true,
     reportFormat: 'webview',
     maxScanFiles: 5000,
-    exclude: ['node_modules', '.git', 'dist', 'build', 'coverage']
+    exclude: ['node_modules', '.git', 'dist', 'build', 'coverage'],
+    customWrappers: [],
+    autoTranslateProvider: 'google',
+    autoTranslateTargets: [],
+    autoTranslateMode: 'onlyMissing'
   });
 
   assert.deepEqual(result.locales.sort(), ['en', 'fr']);

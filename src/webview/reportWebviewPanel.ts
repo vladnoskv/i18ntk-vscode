@@ -37,6 +37,21 @@ export class ReportWebviewPanel {
               await this.saveReportToFile(this.currentReport);
             }
             break;
+          case 'validateLocales':
+            await vscode.commands.executeCommand('i18ntk.validateLocales');
+            break;
+          case 'analyzeUsage':
+            await vscode.commands.executeCommand('i18ntk.analyzeUsage');
+            break;
+          case 'autoTranslate':
+            await vscode.commands.executeCommand('i18ntk.autoTranslateMissing');
+            break;
+          case 'addMissingKey':
+            await vscode.commands.executeCommand('i18ntk.addMissingKey', message.key);
+            break;
+          case 'openSettings':
+            await vscode.commands.executeCommand('i18ntk.openSettings');
+            break;
           case 'openFile':
             if (message.filePath) {
               const uri = vscode.Uri.file(message.filePath);

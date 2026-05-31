@@ -36,7 +36,7 @@ export class WorkspaceScanner {
     const sourceValues = keyValues[config.sourceLocale] ?? {};
     const sourceFiles = await findFiles(rootPath, SOURCE_EXTENSIONS, config.exclude, config.maxScanFiles);
     if (token?.isCancellationRequested) throw new (require('vscode') as any).CancellationError();
-    const sourceUsages = await this.scanSourceUsages(sourceFiles, token);
+    const sourceUsages = await this.scanSourceUsages(sourceFiles, config.customWrappers, token);
     if (token?.isCancellationRequested) throw new (require('vscode') as any).CancellationError();
     const usedKeys = new Set(sourceUsages.map((usage) => usage.key));
     const allLocaleKeys = new Set<string>();
@@ -71,7 +71,7 @@ export class WorkspaceScanner {
     };
   }
 
-  private async scanSourceUsages(files: string[], token?: { isCancellationRequested: boolean }): Promise<TranslationKeyUsage[]> {
+  private async scanSourceUsages(files: string[], customWrappers: string[], token?: { isCancellationRequested: boolean }): Promise<TranslationKeyUsage[]> {
     const usages: TranslationKeyUsage[] = [];
     for (const filePath of files) {
       if (token?.isCancellationRequested) break;
@@ -81,7 +81,7 @@ export class WorkspaceScanner {
       } catch {
         continue;
       }
-      for (const match of findTranslationKeys(content)) {
+      for (const match of findTranslationKeys(content, customWrappers)) {
         usages.push({ key: match.key, filePath, range: match.range });
       }
     }

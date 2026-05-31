@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { MissingKeyCodeActionProvider } from './codeActions/missingKeyCodeActionProvider';
 import { registerAddMissingKeyCommand } from './commands/addMissingKeyCommand';
+import { registerAutoTranslateCommand } from './commands/autoTranslateCommand';
 import { registerOpenReportCommand } from './commands/openReportCommand';
 import { openKeyInLocaleFilesCommand } from './commands/openKeyInLocaleFilesCommand';
 import { registerRefreshTreeCommand } from './commands/refreshTreeCommand';
@@ -13,6 +14,7 @@ import { KeyUsageService } from './services/keyUsageService';
 import { WorkspaceScanner } from './services/workspaceScanner';
 import { LocaleHealthTreeProvider } from './tree/localeHealthTreeProvider';
 import { ReportWebviewPanel } from './webview/reportWebviewPanel';
+import { WorkbenchSettingsPanel } from './webview/settingsWebviewPanel';
 
 export function activate(context: vscode.ExtensionContext): void {
   const outputChannel = vscode.window.createOutputChannel('i18ntk Workbench');
@@ -44,8 +46,12 @@ export function activate(context: vscode.ExtensionContext): void {
   registerRefreshTreeCommand(context, treeProvider);
   registerOpenReportCommand(context, state, reportPanel);
   registerAddMissingKeyCommand(context, state);
+  registerAutoTranslateCommand(context, state, logger);
   context.subscriptions.push(vscode.commands.registerCommand('i18ntk.openKeyInLocaleFiles', (key?: string) => openKeyInLocaleFilesCommand(keyUsage, key)));
   context.subscriptions.push(vscode.commands.registerCommand('i18ntk.openSettings', () => {
+    WorkbenchSettingsPanel.open(context);
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand('i18ntk.openNativeSettings', () => {
     vscode.commands.executeCommand('workbench.action.openSettings', 'i18ntk');
   }));
 

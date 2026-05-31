@@ -13,7 +13,11 @@ export function getExtensionConfig(rootPath: string, localeDirectory: string): R
     showHoverTranslations: config.get('showHoverTranslations', true),
     reportFormat: config.get('reportFormat', 'webview'),
     maxScanFiles: config.get('maxScanFiles', 5000),
-    exclude: config.get('exclude', ['node_modules', '.next', 'dist', 'build', 'coverage'])
+    exclude: config.get('exclude', ['node_modules', '.next', 'dist', 'build', 'coverage']),
+    customWrappers: config.get('customWrappers', []),
+    autoTranslateProvider: config.get('autoTranslateProvider', 'google'),
+    autoTranslateTargets: config.get('autoTranslateTargets', []),
+    autoTranslateMode: config.get('autoTranslateMode', 'onlyMissing')
   };
 }
 

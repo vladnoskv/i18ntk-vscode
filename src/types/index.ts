@@ -16,6 +16,10 @@ export interface ResolvedI18ntkConfig {
   reportFormat: 'webview' | 'markdown';
   maxScanFiles: number;
   exclude: string[];
+  customWrappers: string[];
+  autoTranslateProvider: 'google' | 'deepl' | 'libretranslate';
+  autoTranslateTargets: string[];
+  autoTranslateMode: 'onlyMissing' | 'translateAll' | 'dryRun';
 }
 
 export interface LocaleFileInfo {

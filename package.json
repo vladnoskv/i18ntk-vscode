@@ -2,7 +2,7 @@
   "name": "i18ntk-workbench",
   "displayName": "i18ntk Workbench",
   "description": "Local-first i18n quality control, diagnostics, reports, and key management powered by i18ntk workflows.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "vladnoskv",
   "license": "MIT",
   "repository": {
@@ -32,6 +32,14 @@
     "onCommand:i18ntk.addMissingKey",
     "onCommand:i18ntk.openKeyInLocaleFiles",
     "onCommand:i18ntk.openSettings",
+    "onCommand:i18ntk.openNativeSettings",
+    "onCommand:i18ntk.autoTranslateMissing",
+    "onCommand:i18ntk.validateLocales",
+    "onCommand:i18ntk.analyzeUsage",
+    "onCommand:i18ntk.showSummary",
+    "onCommand:i18ntk.lensScan",
+    "onCommand:i18ntk.lensOpenKey",
+    "onCommand:i18ntk.lensOpenSettings",
     "workspaceContains:locales",
     "workspaceContains:locale",
     "workspaceContains:i18n",
@@ -120,6 +128,34 @@
             "type": "string"
           },
           "description": "Custom translation wrapper function names to detect (e.g. tx, __, _t)."
+        },
+        "i18ntk.autoTranslateProvider": {
+          "type": "string",
+          "default": "google",
+          "enum": [
+            "google",
+            "deepl",
+            "libretranslate"
+          ],
+          "description": "Provider used by i18ntk Auto Translate when launched from the Workbench."
+        },
+        "i18ntk.autoTranslateTargets": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Default target locales for Auto Translate. Empty means infer target locales from the latest scan."
+        },
+        "i18ntk.autoTranslateMode": {
+          "type": "string",
+          "default": "onlyMissing",
+          "enum": [
+            "onlyMissing",
+            "translateAll",
+            "dryRun"
+          ],
+          "description": "Auto Translate mode: keep existing translations, retranslate everything, or preview without writing files."
         }
       }
     },
@@ -157,8 +193,18 @@
         "category": "i18ntk"
       },
       {
+        "command": "i18ntk.openNativeSettings",
+        "title": "i18ntk: Open Native Settings",
+        "category": "i18ntk"
+      },
+      {
         "command": "i18ntk.validateLocales",
         "title": "i18ntk: Validate Locales",
+        "category": "i18ntk"
+      },
+      {
+        "command": "i18ntk.autoTranslateMissing",
+        "title": "i18ntk: Auto Translate Missing",
         "category": "i18ntk"
       },
       {
@@ -209,17 +255,42 @@
         {
           "command": "i18ntk.scanWorkspace",
           "when": "view == i18ntk.localeHealth",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "i18ntk.refreshLocaleHealth",
           "when": "view == i18ntk.localeHealth",
-          "group": "navigation"
+          "group": "navigation@2"
         },
         {
           "command": "i18ntk.openReport",
           "when": "view == i18ntk.localeHealth",
-          "group": "navigation"
+          "group": "navigation@3"
+        },
+        {
+          "command": "i18ntk.validateLocales",
+          "when": "view == i18ntk.localeHealth",
+          "group": "1_quality@1"
+        },
+        {
+          "command": "i18ntk.analyzeUsage",
+          "when": "view == i18ntk.localeHealth",
+          "group": "1_quality@2"
+        },
+        {
+          "command": "i18ntk.autoTranslateMissing",
+          "when": "view == i18ntk.localeHealth",
+          "group": "2_actions@1"
+        },
+        {
+          "command": "i18ntk.addMissingKey",
+          "when": "view == i18ntk.localeHealth",
+          "group": "2_actions@2"
+        },
+        {
+          "command": "i18ntk.openSettings",
+          "when": "view == i18ntk.localeHealth",
+          "group": "3_manage@1"
         }
       ]
     }

@@ -3,9 +3,14 @@ import { ReportWebviewPanel } from '../webview/reportWebviewPanel';
 import { ScanState } from './scanWorkspaceCommand';
 
 export function registerOpenReportCommand(context: any, state: ScanState, panel: ReportWebviewPanel): void {
-  context.subscriptions.push(vscode.commands.registerCommand('i18ntk.openReport', () => {
+  context.subscriptions.push(vscode.commands.registerCommand('i18ntk.openReport', async () => {
     if (!state.report) {
       vscode.window.showWarningMessage('Run i18ntk: Scan Workspace before opening the report.');
+      return;
+    }
+    if (vscode.workspace.getConfiguration('i18ntk').get('reportFormat', 'webview') === 'markdown') {
+      const document = await vscode.workspace.openTextDocument({ content: state.report.markdown, language: 'markdown' });
+      await vscode.window.showTextDocument(document, { preview: false });
       return;
     }
     panel.open(state.report);
