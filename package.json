@@ -2,7 +2,7 @@
   "name": "i18ntk-workbench",
   "displayName": "i18ntk Workbench",
   "description": "Local-first i18ntk workbench for setup, scanning, validation, usage checks, reports, key management, and CLI-backed Auto Translate.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "VladNoskov",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -353,8 +353,8 @@
     "@types/node": "^20.14.0",
     "@types/vscode": "^1.90.0",
     "@vscode/test-electron": "^2.4.1",
-    "typescript": "^5.8.3",
-    "vsce": "^2.15.0"
+    "@vscode/vsce": "^3.9.1",
+    "typescript": "^5.8.3"
   },
   "extensionDependencies": []
 }
