@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { buildAutoTranslateArgs, getDirectoryLocaleLayout } from '../../src/services/i18ntkCliService';
+import { buildAutoTranslateArgs, findI18ntkScript, getDirectoryLocaleLayout } from '../../src/services/i18ntkCliService';
 import { ResolvedI18ntkConfig } from '../../src/types';
 
 function config(rootPath: string): ResolvedI18ntkConfig {
@@ -62,4 +62,14 @@ test('buildAutoTranslateArgs can request dry-run translate-all mode', () => {
   assert.equal(args.includes('deepl'), true);
   assert.equal(args.includes('--translate-all'), true);
   assert.equal(args.includes('--dry-run'), true);
+});
+
+test('findI18ntkScript recommends local npm install when the CLI is missing', () => {
+  const missingRoot = path.resolve(process.cwd(), 'test/fixtures/does-not-exist');
+
+  assert.equal(findI18ntkScript(missingRoot, 'i18ntk-translate.js'), undefined);
+  assert.match(
+    findI18ntkScript.installMessage,
+    /npm install i18ntk/
+  );
 });

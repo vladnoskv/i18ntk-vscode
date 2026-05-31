@@ -26,7 +26,8 @@ export interface AutoTranslateResult {
 export function findI18ntkScript(rootPath: string, scriptName: string): string | undefined {
   const candidates = [
     path.resolve(rootPath, '../i18ntk/main', scriptName),
-    path.resolve(rootPath, 'node_modules/i18ntk/main', scriptName)
+    path.resolve(rootPath, 'node_modules/i18ntk/main', scriptName),
+    path.resolve(rootPath, 'node_modules/.bin', process.platform === 'win32' ? scriptName.replace(/\.js$/, '.cmd') : scriptName.replace(/\.js$/, ''))
   ];
   return candidates.find((candidate) => {
     try {
@@ -36,6 +37,10 @@ export function findI18ntkScript(rootPath: string, scriptName: string): string |
       return false;
     }
   });
+}
+
+export namespace findI18ntkScript {
+  export const installMessage = 'i18ntk auto-translate CLI was not found. Install it in this workspace with "npm install i18ntk", or keep the sibling i18ntk package next to this workspace.';
 }
 
 export function getDirectoryLocaleLayout(config: ResolvedI18ntkConfig): DirectoryLocaleLayout | undefined {
@@ -92,7 +97,7 @@ export class I18ntkCliService {
   async autoTranslate(config: ResolvedI18ntkConfig, targetLocales: string[], options?: Partial<AutoTranslateRunOptions>): Promise<AutoTranslateResult[]> {
     const scriptPath = findI18ntkScript(config.rootPath, 'i18ntk-translate.js');
     if (!scriptPath) {
-      throw new Error('i18ntk auto-translate CLI was not found. Install i18ntk locally or keep the sibling i18ntk package next to this workspace.');
+      throw new Error(findI18ntkScript.installMessage);
     }
     const layout = getDirectoryLocaleLayout(config);
     if (!layout) {

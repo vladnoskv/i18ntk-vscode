@@ -1,9 +1,9 @@
 {
   "name": "i18ntk-workbench",
   "displayName": "i18ntk Workbench",
-  "description": "Local-first i18n quality control, diagnostics, reports, and key management powered by i18ntk workflows.",
-  "version": "0.2.0",
-  "publisher": "vladnoskv",
+  "description": "Local-first i18ntk workbench for setup, scanning, validation, usage checks, reports, key management, and CLI-backed Auto Translate.",
+  "version": "1.0.0",
+  "publisher": "VladNoskov",
   "license": "MIT",
   "icon": "media/icon.png",
   "repository": {
@@ -343,7 +343,10 @@
   "scripts": {
     "compile": "tsc -p .",
     "watch": "tsc -watch -p .",
-    "test": "npm run compile && node --test out/test/unit/*.test.js",
+    "test:compile": "tsc -p .",
+    "test:unit": "node --test out/test/unit/*.test.js",
+    "test": "npm run test:compile && npm run test:unit",
+    "verify": "npm test && npm run package",
     "package": "vsce package"
   },
   "devDependencies": {

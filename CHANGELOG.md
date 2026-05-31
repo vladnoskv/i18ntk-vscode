@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.0 - 2026-05-31
+
+- First Marketplace-ready release.
+- Polished launch documentation for Workbench workflows, privacy, supported layouts, and Auto Translate.
+- Added clearer test scripts for compile, unit, aggregate, and release verification.
+- Added explicit CLI installation guidance for `npm install i18ntk` when Auto Translate is used.
+- Documented that Workbench owns the single i18ntk Activity Bar icon while Lens stays inline-only.
+- Packaged extension for VS Code Marketplace distribution.
+
 ## 0.2.0 - 2026-05-31
 
 - Bumped extension version to 0.2.0.

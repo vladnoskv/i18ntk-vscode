@@ -96,7 +96,9 @@ export function activate(context: vscode.ExtensionContext): void {
   }));
 
   try {
-    const lensExtension = vscode.extensions.getExtension('vladnoskv.i18ntk-lens');
+    const lensExtension =
+      vscode.extensions.getExtension('VladNoskov.i18ntk-lens') ??
+      vscode.extensions.getExtension('vladnoskv.i18ntk-lens');
     if (lensExtension) {
       lensExtension.activate().then(() => {
         logger.info('i18ntk Lens detected — integrated into Workbench.');
