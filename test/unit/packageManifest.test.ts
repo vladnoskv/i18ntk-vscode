@@ -5,6 +5,9 @@ import path from 'node:path';
 
 const manifest = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package.json'), 'utf8')) as {
   contributes?: {
+    configuration?: {
+      properties?: Record<string, unknown>;
+    };
     viewsContainers?: {
       activitybar?: Array<{ id: string; icon: string }>;
     };
@@ -19,7 +22,7 @@ test('manifest keeps Workbench as the single i18ntk Activity Bar owner', () => {
     {
       id: 'i18ntkWorkbench',
       title: 'i18ntk Workbench',
-      icon: 'media/icon.png'
+      icon: 'media/icon.svg'
     }
   ]);
   assert.deepEqual(manifest.contributes?.views?.i18ntkWorkbench, [
@@ -28,6 +31,13 @@ test('manifest keeps Workbench as the single i18ntk Activity Bar owner', () => {
       name: 'Locale Health'
     }
   ]);
+});
+
+test('manifest exposes diagnostic severity and ignore settings', () => {
+  const properties = manifest.contributes?.configuration?.properties as Record<string, any>;
+  assert.equal(properties?.['i18ntk.diagnosticSeverities']?.default?.['i18ntk.expansionRisk'], 'off');
+  assert.deepEqual(properties?.['i18ntk.diagnosticSeverities']?.additionalProperties?.enum, ['error', 'warning', 'off', 'ignore']);
+  assert.deepEqual(properties?.['i18ntk.ignoredDiagnostics']?.default, []);
 });
 
 test('package scripts separate compile, unit tests, aggregate tests, verify, and package', () => {

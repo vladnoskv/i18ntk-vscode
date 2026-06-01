@@ -2,7 +2,7 @@
   "name": "i18ntk-workbench",
   "displayName": "i18ntk Workbench",
   "description": "VS Code workbench for i18ntk projects: setup, scanning, validation, usage reports, key management, and CLI-backed Auto Translate.",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "publisher": "VladNoskov",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -72,17 +72,46 @@
         "i18ntk.showInlineDiagnostics": {
           "type": "boolean",
           "default": true,
-          "description": "Show missing key and locale diagnostics in editors."
+          "description": "Show Workbench missing key and locale diagnostics in editors. If i18ntk Lens is installed, Lens owns inline diagnostics to avoid duplicates."
         },
         "i18ntk.showHoverTranslations": {
           "type": "boolean",
           "default": true,
-          "description": "Show locale values when hovering over detected translation keys."
+          "description": "Show Workbench locale values when hovering over detected translation keys. If i18ntk Lens is installed, Lens owns inline hovers to avoid duplicates."
         },
         "i18ntk.highlightLocaleKeys": {
           "type": "boolean",
           "default": true,
           "description": "Color-code keys in scanned locale JSON files by nesting depth."
+        },
+        "i18ntk.diagnosticSeverities": {
+          "type": "object",
+          "default": {
+            "i18ntk.missingKey": "warning",
+            "i18ntk.placeholderMismatch": "error",
+            "i18ntk.invalidKeyName": "warning",
+            "i18ntk.unusedKey": "warning",
+            "i18ntk.riskyContent": "warning",
+            "i18ntk.expansionRisk": "off"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning",
+              "off",
+              "ignore"
+            ]
+          },
+          "description": "Controls which i18ntk diagnostics appear in Problems and their severity. Use off or ignore to hide a diagnostic rule."
+        },
+        "i18ntk.ignoredDiagnostics": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Specific i18ntk diagnostics ignored by quick fixes, stored as rule:key or rule:key:locale identifiers."
         },
         "i18ntk.reportFormat": {
           "type": "string",
@@ -180,12 +209,22 @@
         "category": "i18ntk"
       },
       {
+        "command": "i18ntk.ignoreDiagnostic",
+        "title": "i18ntk: Ignore Diagnostic",
+        "category": "i18ntk"
+      },
+      {
+        "command": "i18ntk.setDiagnosticSeverity",
+        "title": "i18ntk: Set Diagnostic Severity",
+        "category": "i18ntk"
+      },
+      {
         "command": "i18ntk.openSettings",
         "title": "i18ntk: Open Settings",
         "category": "i18ntk",
         "icon": {
-          "light": "media/icon.png",
-          "dark": "media/icon.png"
+          "light": "media/icon-light.svg",
+          "dark": "media/icon-dark.svg"
         }
       },
       {
@@ -246,7 +285,7 @@
         {
           "id": "i18ntkWorkbench",
           "title": "i18ntk Workbench",
-          "icon": "media/icon.png"
+          "icon": "media/icon.svg"
         }
       ]
     },

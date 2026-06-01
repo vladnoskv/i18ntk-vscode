@@ -39,13 +39,12 @@ export class WorkspaceScanner {
     if (token?.isCancellationRequested) throw new (require('vscode') as any).CancellationError();
     const sourceUsages = await this.scanSourceUsages(sourceFiles, config.customWrappers, keyValues, locales, token);
     if (token?.isCancellationRequested) throw new (require('vscode') as any).CancellationError();
-    const usedKeys = new Set(sourceUsages.map((usage) => usage.key));
     const allLocaleKeys = new Set<string>();
     Object.values(keyValues).forEach((values) => Object.keys(values).forEach((key) => allLocaleKeys.add(key)));
 
     const missingKeys = this.collectMissingKeys(config, locales, keyValues, sourceUsages, sourceFiles);
     const placeholderMismatches = this.collectPlaceholderMismatches(config, locales, keyValues, localeFiles);
-    const unusedKeys = this.collectUnusedKeys(config, sourceValues, usedKeys, localeFiles);
+    const unusedKeys = this.collectUnusedKeys(config, sourceValues, sourceUsages, localeFiles);
     const invalidKeyNames = this.collectInvalidKeyNames(config, allLocaleKeys, localeFiles);
     const riskyContent = this.collectRiskyContent(config, locales, keyValues, localeFiles);
     const expansionRisks = this.collectExpansionRisks(config, locales, keyValues, localeFiles);
@@ -96,7 +95,7 @@ export class WorkspaceScanner {
       for (const match of findTranslationKeys(content, customWrappers)) {
         const keys = this.selectUsageKeys(match, keyValues, locales);
         for (const key of keys) {
-          usages.push({ key, filePath, range: match.range });
+          usages.push({ key, dynamic: match.dynamic, filePath, range: match.range });
         }
       }
       for (const usage of findKnownKeyLiteralUsages(content, filePath, allKnownKeys)) {
@@ -106,10 +105,11 @@ export class WorkspaceScanner {
     return usages;
   }
 
-  private selectUsageKeys(match: { key: string; resolvedKeys?: string[] }, keyValues: Record<string, Record<string, string>>, locales: string[]): string[] {
+  private selectUsageKeys(match: { key: string; dynamic?: boolean; resolvedKeys?: string[] }, keyValues: Record<string, Record<string, string>>, locales: string[]): string[] {
     const candidates = [match.key, ...(match.resolvedKeys ?? [])];
-    const known = candidates.filter((key) => locales.some((locale) => keyValues[locale]?.[key] !== undefined));
-    return [...new Set(known.length ? known : candidates)];
+    const known = candidates.filter((key) => locales.some((locale) => usageExistsInLocale({ key, dynamic: false }, keyValues[locale] ?? {})));
+    if (known.length) return [...new Set(known)];
+    return [...new Set(match.dynamic ? (match.resolvedKeys ?? [match.key]) : candidates)];
   }
 
   private collectMissingKeys(
@@ -127,8 +127,8 @@ export class WorkspaceScanner {
     const keysToCheck = new Set(usageByKey.keys());
     for (const key of keysToCheck) {
       for (const locale of locales) {
-        if (!keyValues[locale] || keyValues[locale][key] === undefined) {
-          const usage = usageByKey.get(key)?.[0];
+        const usage = usageByKey.get(key)?.[0];
+        if (!usageExistsInLocale(usage ?? { key }, keyValues[locale] ?? {})) {
           issues.push({
             key,
             locale,
@@ -166,9 +166,9 @@ export class WorkspaceScanner {
     return issues;
   }
 
-  private collectUnusedKeys(config: ResolvedI18ntkConfig, sourceValues: Record<string, string>, usedKeys: Set<string>, localeFiles: Array<{ locale: string; filePath: string; keys: string[]; keyRanges?: Record<string, TextRange> }>): UnusedKeyIssue[] {
+  private collectUnusedKeys(config: ResolvedI18ntkConfig, sourceValues: Record<string, string>, usages: TranslationKeyUsage[], localeFiles: Array<{ locale: string; filePath: string; keys: string[]; keyRanges?: Record<string, TextRange> }>): UnusedKeyIssue[] {
     return Object.keys(sourceValues)
-      .filter((key) => !usedKeys.has(key))
+      .filter((key) => !usages.some((usage) => usageMatchesKey(usage, key)))
       .map((key) => ({
         key,
         locale: config.sourceLocale,
@@ -294,6 +294,29 @@ function knownKeys(keyValues: Record<string, Record<string, string>>): Set<strin
   return keys;
 }
 
+function aliasesForKey(key: string): Set<string> {
+  const aliases = new Set([key]);
+  if (key.includes('_')) aliases.add(key.replace(/_/g, '.'));
+  if (key.includes('.')) aliases.add(key.replace(/\./g, '_'));
+  return aliases;
+}
+
+function usageExistsInLocale(usage: { key: string; dynamic?: boolean }, localeValues: Record<string, string>): boolean {
+  if (usage.dynamic) {
+    return [...aliasesForKey(usage.key)].some((prefix) => Object.keys(localeValues).some((key) => key.startsWith(prefix)));
+  }
+  return [...aliasesForKey(usage.key)].some((key) => localeValues[key] !== undefined);
+}
+
+function usageMatchesKey(usage: { key: string; dynamic?: boolean }, key: string): boolean {
+  const keyAliases = aliasesForKey(key);
+  const usageAliases = aliasesForKey(usage.key);
+  if (usage.dynamic) {
+    return [...usageAliases].some((prefix) => [...keyAliases].some((keyAlias) => keyAlias.startsWith(prefix)));
+  }
+  return [...usageAliases].some((usageAlias) => keyAliases.has(usageAlias));
+}
+
 function findKnownKeyLiteralUsages(text: string, filePath: string, keys: Set<string>): TranslationKeyUsage[] {
   const usages: TranslationKeyUsage[] = [];
   const pattern = /(['"`])((?:\\.|(?!\1)[\s\S])*?)\1/g;
@@ -303,7 +326,7 @@ function findKnownKeyLiteralUsages(text: string, filePath: string, keys: Set<str
     if (!keys.has(literal)) continue;
     const start = match.index + 1;
     const end = start + literal.length;
-    usages.push({ key: literal, filePath, range: rangeFromOffsets(text, start, end) });
+    usages.push({ key: literal, dynamic: false, filePath, range: rangeFromOffsets(text, start, end) });
   }
   return usages;
 }

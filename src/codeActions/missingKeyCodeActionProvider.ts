@@ -28,6 +28,30 @@ export class MissingKeyCodeActionProvider {
         arguments: [key]
       };
       actions.push(openAction);
+
+      const ignoreId = diagnostic.data?.ignoreId;
+      if (typeof ignoreId === 'string') {
+        const ignoreAction = new vscode.CodeAction('Ignore this i18ntk diagnostic', vscode.CodeActionKind.QuickFix);
+        ignoreAction.diagnostics = [diagnostic];
+        ignoreAction.command = {
+          command: 'i18ntk.ignoreDiagnostic',
+          title: 'Ignore this i18ntk diagnostic',
+          arguments: [ignoreId]
+        };
+        actions.push(ignoreAction);
+      }
+
+      const code = typeof diagnostic.code === 'string' ? diagnostic.code : diagnostic.code?.value;
+      if (typeof code === 'string') {
+        const ignoreRuleAction = new vscode.CodeAction(`Turn off ${code}`, vscode.CodeActionKind.QuickFix);
+        ignoreRuleAction.diagnostics = [diagnostic];
+        ignoreRuleAction.command = {
+          command: 'i18ntk.setDiagnosticSeverity',
+          title: `Turn off ${code}`,
+          arguments: [code, 'off']
+        };
+        actions.push(ignoreRuleAction);
+      }
     }
     return actions;
   }

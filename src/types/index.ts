@@ -36,6 +36,7 @@ export interface LocaleFileInfo {
 
 export interface TranslationKeyUsage {
   key: string;
+  dynamic?: boolean;
   filePath: string;
   range: TextRange;
 }
@@ -134,4 +135,11 @@ export interface DiagnosticLike {
   message: string;
   code: string;
   data?: Record<string, unknown>;
+}
+
+export type DiagnosticRuleSeverity = 'error' | 'warning' | 'off' | 'ignore';
+
+export interface DiagnosticSettings {
+  severities: Record<string, DiagnosticRuleSeverity | undefined>;
+  ignoredDiagnostics: string[];
 }

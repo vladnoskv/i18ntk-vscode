@@ -1,15 +1,21 @@
 import * as vscode from 'vscode';
-import { I18nScanResult } from '../types';
+import { DiagnosticRuleSeverity, I18nScanResult } from '../types';
 import { mapScanResultToDiagnostics } from './diagnosticsMapper';
 
 export class DiagnosticsProvider {
   private readonly collection = vscode.languages.createDiagnosticCollection('i18ntk');
+  private result?: I18nScanResult;
 
   update(result: I18nScanResult | undefined): void {
+    this.result = result;
+    this.refresh();
+  }
+
+  refresh(): void {
     this.collection.clear();
-    if (!result) return;
+    if (!this.result) return;
     const grouped = new Map<string, any[]>();
-    for (const diagnostic of mapScanResultToDiagnostics(result)) {
+    for (const diagnostic of mapScanResultToDiagnostics(this.result, readDiagnosticSettings())) {
       const range = new vscode.Range(
         diagnostic.range.startLine,
         diagnostic.range.startCharacter,
@@ -35,4 +41,12 @@ export class DiagnosticsProvider {
   dispose(): void {
     this.collection.dispose();
   }
+}
+
+function readDiagnosticSettings(): { severities: Record<string, DiagnosticRuleSeverity | undefined>; ignoredDiagnostics: string[] } {
+  const config = vscode.workspace.getConfiguration('i18ntk');
+  return {
+    severities: config.get('diagnosticSeverities', {}) as Record<string, DiagnosticRuleSeverity | undefined>,
+    ignoredDiagnostics: config.get('ignoredDiagnostics', []) as string[]
+  };
 }

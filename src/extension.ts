@@ -17,6 +17,7 @@ import { WorkspaceScanner } from './services/workspaceScanner';
 import { LocaleHealthTreeProvider } from './tree/localeHealthTreeProvider';
 import { ReportWebviewPanel } from './webview/reportWebviewPanel';
 import { WorkbenchSettingsPanel } from './webview/settingsWebviewPanel';
+import { DiagnosticRuleSeverity } from './types';
 
 export function activate(context: vscode.ExtensionContext): void {
   const outputChannel = vscode.window.createOutputChannel('i18ntk Workbench');
@@ -31,6 +32,10 @@ export function activate(context: vscode.ExtensionContext): void {
   const reportPanel = new ReportWebviewPanel(context, async () => {
     await vscode.commands.executeCommand('i18ntk.scanWorkspace');
   });
+  const lensExtension =
+    vscode.extensions.getExtension('VladNoskov.i18ntk-lens') ??
+    vscode.extensions.getExtension('vladnoskv.i18ntk-lens');
+  const hasLensExtension = Boolean(lensExtension);
 
   context.subscriptions.push(outputChannel, diagnostics, localeKeyDecorations);
   vscode.window.registerTreeDataProvider('i18ntk.localeHealth', treeProvider);
@@ -39,7 +44,9 @@ export function activate(context: vscode.ExtensionContext): void {
     keyUsage.update(result);
     treeProvider.setResult(result);
     localeKeyDecorations.update(result);
-    if (vscode.workspace.getConfiguration('i18ntk').get('showInlineDiagnostics', true)) {
+    if (hasLensExtension || !vscode.workspace.getConfiguration('i18ntk').get('showInlineDiagnostics', true)) {
+      diagnostics.update(undefined);
+    } else {
       diagnostics.update(result);
     }
   };
@@ -58,6 +65,22 @@ export function activate(context: vscode.ExtensionContext): void {
   }));
   context.subscriptions.push(vscode.commands.registerCommand('i18ntk.openNativeSettings', () => {
     vscode.commands.executeCommand('workbench.action.openSettings', 'i18ntk');
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand('i18ntk.ignoreDiagnostic', async (ignoreId?: string) => {
+    if (!ignoreId) return;
+    const config = vscode.workspace.getConfiguration('i18ntk');
+    const ignored = new Set(config.get('ignoredDiagnostics', []) as string[]);
+    ignored.add(ignoreId);
+    await config.update('ignoredDiagnostics', [...ignored].sort(), vscode.ConfigurationTarget.Workspace);
+    diagnostics.refresh();
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand('i18ntk.setDiagnosticSeverity', async (code?: string, severity?: DiagnosticRuleSeverity) => {
+    if (!code || !severity) return;
+    const config = vscode.workspace.getConfiguration('i18ntk');
+    const severities = { ...(config.get('diagnosticSeverities', {}) as Record<string, DiagnosticRuleSeverity>) };
+    severities[code] = severity;
+    await config.update('diagnosticSeverities', severities, vscode.ConfigurationTarget.Workspace);
+    diagnostics.refresh();
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('i18ntk.validateLocales', async () => {
@@ -99,12 +122,9 @@ export function activate(context: vscode.ExtensionContext): void {
   }));
 
   try {
-    const lensExtension =
-      vscode.extensions.getExtension('VladNoskov.i18ntk-lens') ??
-      vscode.extensions.getExtension('vladnoskv.i18ntk-lens');
     if (lensExtension) {
       lensExtension.activate().then(() => {
-        logger.info('i18ntk Lens detected — integrated into Workbench.');
+        logger.info('i18ntk Lens detected - Lens owns inline hovers and diagnostics; Workbench keeps sidebar and reports.');
       }).catch(() => {
         logger.info('i18ntk Lens activation failed.');
       });
@@ -134,11 +154,13 @@ export function activate(context: vscode.ExtensionContext): void {
   ];
 
   context.subscriptions.push(
-    vscode.languages.registerHoverProvider(documentSelector, new TranslationHoverProvider(() => state.result)),
     vscode.languages.registerCodeActionsProvider(documentSelector, new MissingKeyCodeActionProvider(), {
       providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
     })
   );
+  if (!hasLensExtension) {
+    context.subscriptions.push(vscode.languages.registerHoverProvider(documentSelector, new TranslationHoverProvider(() => state.result)));
+  }
 
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(() => {
@@ -147,6 +169,12 @@ export function activate(context: vscode.ExtensionContext): void {
     saveTimer = setTimeout(() => {
       vscode.commands.executeCommand('i18ntk.scanWorkspace');
     }, 750);
+  }));
+
+  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
+    if (event.affectsConfiguration('i18ntk.diagnosticSeverities') || event.affectsConfiguration('i18ntk.ignoredDiagnostics')) {
+      if (!hasLensExtension) diagnostics.refresh();
+    }
   }));
 
   const fileWatcher = vscode.workspace.createFileSystemWatcher('**/locales/**/*.json');
@@ -185,3 +213,4 @@ export function activate(context: vscode.ExtensionContext): void {
 }
 
 export function deactivate(): void {}
+

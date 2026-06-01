@@ -112,6 +112,83 @@ test('WorkspaceScanner treats exact known translation string literals as used ke
   assert.deepEqual(result.unusedKeys.map((item) => item.key), ['duel.unused']);
 });
 
+test('WorkspaceScanner uses resolved runtime candidates for missing and unused checks', async () => {
+  const rootPath = await fs.mkdtemp(path.join(os.tmpdir(), 'i18ntk-workbench-'));
+  await fs.mkdir(path.join(rootPath, 'locales'), { recursive: true });
+  await fs.mkdir(path.join(rootPath, 'src'), { recursive: true });
+  await fs.writeFile(path.join(rootPath, 'locales', 'en.json'), JSON.stringify({
+    news: { page: { topics: { sports: 'Sports', weather: 'Weather', unused: 'Unused' } } }
+  }));
+  await fs.writeFile(path.join(rootPath, 'locales', 'fr.json'), JSON.stringify({
+    news: { page: { topics: { sports: 'Sports FR' } } }
+  }));
+  await fs.writeFile(path.join(rootPath, 'src', 'app.ts'), [
+    'const topics = ["sports", "weather"];',
+    'topics.map((item) => tx(`news.page.topics.${item}`));'
+  ].join('\n'));
+
+  const scanner = new WorkspaceScanner(new ConsoleLogger());
+  const result = await scanner.scan(rootPath, {
+    rootPath,
+    localeDirectory: path.join(rootPath, 'locales'),
+    sourceLocale: 'en',
+    keyStyle: 'dot',
+    autoScanOnSave: false,
+    showInlineDiagnostics: true,
+    showHoverTranslations: true,
+    reportFormat: 'webview',
+    maxScanFiles: 5000,
+    exclude: ['node_modules', '.git', 'dist', 'build', 'coverage'],
+    customWrappers: [],
+    autoTranslateProvider: 'google',
+    autoTranslateTargets: [],
+    autoTranslateMode: 'onlyMissing'
+  });
+
+  assert.deepEqual(result.missingKeys.map((item) => [item.key, item.locale]), [
+    ['news.page.topics.weather', 'fr']
+  ]);
+  assert.deepEqual(result.unusedKeys.map((item) => item.key), ['news.page.topics.unused']);
+});
+
+test('WorkspaceScanner treats scoped namespace helpers as used key prefixes', async () => {
+  const rootPath = await fs.mkdtemp(path.join(os.tmpdir(), 'i18ntk-workbench-'));
+  await fs.mkdir(path.join(rootPath, 'locales'), { recursive: true });
+  await fs.mkdir(path.join(rootPath, 'src'), { recursive: true });
+  await fs.writeFile(path.join(rootPath, 'locales', 'en.json'), JSON.stringify({
+    news: { page: { heading: 'Heading', topics: { sports: 'Sports' } } }
+  }));
+  await fs.writeFile(path.join(rootPath, 'locales', 'fr.json'), JSON.stringify({
+    news: { page: { heading: 'Titre', topics: { sports: 'Sports FR' } } }
+  }));
+  await fs.writeFile(path.join(rootPath, 'src', 'app.ts'), [
+    'const txNews = useTranslations("news.page");',
+    'const heading = txNews("heading");',
+    'const topic = txNews(item);'
+  ].join('\n'));
+
+  const scanner = new WorkspaceScanner(new ConsoleLogger());
+  const result = await scanner.scan(rootPath, {
+    rootPath,
+    localeDirectory: path.join(rootPath, 'locales'),
+    sourceLocale: 'en',
+    keyStyle: 'dot',
+    autoScanOnSave: false,
+    showInlineDiagnostics: true,
+    showHoverTranslations: true,
+    reportFormat: 'webview',
+    maxScanFiles: 5000,
+    exclude: ['node_modules', '.git', 'dist', 'build', 'coverage'],
+    customWrappers: [],
+    autoTranslateProvider: 'google',
+    autoTranslateTargets: [],
+    autoTranslateMode: 'onlyMissing'
+  });
+
+  assert.deepEqual(result.missingKeys, []);
+  assert.deepEqual(result.unusedKeys, []);
+});
+
 test('WorkspaceScanner records locale JSON key ranges for locale diagnostics', async () => {
   const rootPath = await fs.mkdtemp(path.join(os.tmpdir(), 'i18ntk-workbench-'));
   await fs.mkdir(path.join(rootPath, 'locales', 'en'), { recursive: true });

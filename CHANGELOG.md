@@ -1,14 +1,18 @@
 # Changelog
 
-## 1.0.4 - 2026-06-01
+## 1.0.5 - 2026-06-01
 
 - Removed generic function-call key extraction so ordinary app calls such as `get("next")`, `headers.get("etag")`, and `clearWaitlist("admin.panel")` are not reported as missing translation keys.
+- Matched i18ntk Lens source detection for dynamic template prefixes, statically resolved template values, scoped namespace helpers, imported locale objects, and explicit/custom wrappers.
 - Reduced unused-key false positives by treating exact source string and template literals that match known locale keys as usages.
 - Added exact locale JSON key ranges for unused keys, placeholder mismatches, invalid key names, risky content, and expansion warnings.
 - Added Problems/editor quick fixes to open any i18ntk diagnostic key in locale files, while keeping the missing-key add action.
+- Added per-rule diagnostic controls for `error`, `warning`, `off`, and `ignore`, plus right-click ignores for specific diagnostics.
+- Set expansion-risk Problems off by default to avoid flooding large locale projects with advisory entries.
 - Added optional locale JSON key color-coding with `i18ntk.highlightLocaleKeys` and the Workbench settings panel toggle.
 - Invalid-key diagnostics now allow hybrid dot-path plus snake_case segment keys, while malformed separators and uppercase segments remain invalid.
 - Kept explicit translation wrappers, configured custom wrappers, JSX i18n attributes, and imported locale-object reads as supported usage signals.
+- When i18ntk Lens is installed, Workbench now leaves inline hovers and diagnostics to Lens while keeping Workbench sidebar, reports, settings, key management, and Auto Translate scans.
 - Documented that unused-key reports are advisory and should not be used for bulk deletion without verification.
 
 ## 1.0.2 - 2026-05-31

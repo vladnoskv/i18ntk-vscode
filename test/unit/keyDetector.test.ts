@@ -64,3 +64,36 @@ test('findTranslationKeys detects imported locale object property reads', () => 
 
   assert.deepEqual(keys, ['common.save', 'common.actions.retry']);
 });
+
+test('findTranslationKeys detects dynamic template prefixes and resolved static values', () => {
+  const source = [
+    'const state = "created";',
+    'const direct = t(`duel.${state}`);',
+    'const topics = ["sports", "weather"];',
+    'topics.map((topic) => tx(`news.page.topics.${topic}`));'
+  ].join('\n');
+
+  const matches = findTranslationKeys(source) as Array<{ key: string; dynamic?: boolean; resolvedKeys?: string[] }>;
+
+  assert.deepEqual(matches.map((match) => [match.key, match.dynamic, match.resolvedKeys]), [
+    ['duel.', true, ['duel.created']],
+    ['news.page.topics.', true, ['news.page.topics.sports', 'news.page.topics.weather']]
+  ]);
+});
+
+test('findTranslationKeys expands scoped namespace helpers', () => {
+  const source = [
+    'const txNews = useTranslations("news.page");',
+    'const heading = txNews("heading");',
+    'const topic = txNews(`topics.${item}`);',
+    'const dynamicTopic = txNews(item);'
+  ].join('\n');
+
+  const matches = findTranslationKeys(source) as Array<{ key: string; dynamic?: boolean }>;
+
+  assert.deepEqual(matches.map((match) => [match.key, match.dynamic]), [
+    ['news.page.heading', false],
+    ['news.page.topics.', true],
+    ['news.page.', true]
+  ]);
+});

@@ -48,6 +48,11 @@ export class WorkbenchSettingsPanel {
       showInlineDiagnostics: config.get('showInlineDiagnostics', true),
       showHoverTranslations: config.get('showHoverTranslations', true),
       highlightLocaleKeys: config.get('highlightLocaleKeys', true),
+      diagnosticSeverities: {
+        ...DEFAULT_DIAGNOSTIC_SEVERITIES,
+        ...(config.get('diagnosticSeverities', {}) as Record<string, string>)
+      },
+      ignoredDiagnostics: config.get('ignoredDiagnostics', []) as string[],
       reportFormat: config.get('reportFormat', 'webview'),
       maxScanFiles: config.get('maxScanFiles', 5000),
       exclude: config.get('exclude', ['node_modules', '.next', 'dist', 'build', 'coverage']) as string[],
@@ -133,6 +138,15 @@ export class WorkbenchSettingsPanel {
   <label><input type="checkbox" id="showInlineDiagnostics" ${model.showInlineDiagnostics ? 'checked' : ''}>Show inline diagnostics</label>
   <label><input type="checkbox" id="showHoverTranslations" ${model.showHoverTranslations ? 'checked' : ''}>Show hover translations</label>
   <label><input type="checkbox" id="highlightLocaleKeys" ${model.highlightLocaleKeys ? 'checked' : ''}>Color-code locale JSON keys</label>
+  <h2>Problem Diagnostics</h2>
+  <section class="grid">
+    ${DIAGNOSTIC_RULES.map((rule) => selectField(`severity-${rule.code}`, rule.label, model.diagnosticSeverities[rule.code] ?? DEFAULT_DIAGNOSTIC_SEVERITIES[rule.code], ['error', 'warning', 'off', 'ignore'], rule.hint)).join('')}
+  </section>
+  <div class="hint">Use off or ignore to hide noisy rules from Problems. Expansion risks are off by default because large locale sets can produce thousands of advisory entries.</div>
+  <h2>Ignored Diagnostics</h2>
+  <div class="list-editor" id="ignoredDiagnosticsList">${model.ignoredDiagnostics.map((v) => row(v)).join('')}</div>
+  <div class="hint">Right-click an i18ntk Problem and choose ignore to add entries here. Remove entries to show those diagnostics again.</div>
+  <div class="actions"><button id="addIgnoredDiagnostic" class="secondary">Add Ignored Diagnostic</button></div>
   <h2>Auto Translate</h2>
   <section class="grid">
     ${selectField('autoTranslateProvider', 'Provider', model.autoTranslateProvider, ['google', 'deepl', 'libretranslate'], 'DeepL and LibreTranslate may require environment configuration in the CLI.')}
@@ -183,6 +197,8 @@ export class WorkbenchSettingsPanel {
         showInlineDiagnostics: document.getElementById('showInlineDiagnostics').checked,
         showHoverTranslations: document.getElementById('showHoverTranslations').checked,
         highlightLocaleKeys: document.getElementById('highlightLocaleKeys').checked,
+        diagnosticSeverities: Object.fromEntries(${JSON.stringify(DIAGNOSTIC_RULES.map((rule) => rule.code))}.map(code => [code, document.getElementById('severity-' + code).value])),
+        ignoredDiagnostics: values('ignoredDiagnosticsList'),
         autoTranslateProvider: document.getElementById('autoTranslateProvider').value,
         autoTranslateMode: document.getElementById('autoTranslateMode').value,
         autoTranslateTargets: document.getElementById('autoTranslateTargets').value.split(',').map(v => v.trim()).filter(Boolean),
@@ -192,6 +208,7 @@ export class WorkbenchSettingsPanel {
     }
     document.getElementById('addExclude').addEventListener('click', () => addRow('excludeList'));
     document.getElementById('addWrapper').addEventListener('click', () => addRow('wrapperList'));
+    document.getElementById('addIgnoredDiagnostic').addEventListener('click', () => addRow('ignoredDiagnosticsList'));
     document.getElementById('detectLocale').addEventListener('click', () => vsc.postMessage({ command: 'detectLocaleDirectory' }));
     document.getElementById('chooseLocale').addEventListener('click', () => vsc.postMessage({ command: 'chooseLocaleDirectory' }));
     document.addEventListener('click', (event) => {
@@ -260,11 +277,31 @@ const SETTINGS_KEYS = [
   'showInlineDiagnostics',
   'showHoverTranslations',
   'highlightLocaleKeys',
+  'diagnosticSeverities',
+  'ignoredDiagnostics',
   'autoTranslateProvider',
   'autoTranslateMode',
   'autoTranslateTargets',
   'exclude',
   'customWrappers'
+];
+
+const DEFAULT_DIAGNOSTIC_SEVERITIES: Record<string, string> = {
+  'i18ntk.missingKey': 'warning',
+  'i18ntk.placeholderMismatch': 'error',
+  'i18ntk.invalidKeyName': 'warning',
+  'i18ntk.unusedKey': 'warning',
+  'i18ntk.riskyContent': 'warning',
+  'i18ntk.expansionRisk': 'off'
+};
+
+const DIAGNOSTIC_RULES = [
+  { code: 'i18ntk.missingKey', label: 'Missing Keys', hint: 'Used source keys that are missing in one or more locales.' },
+  { code: 'i18ntk.placeholderMismatch', label: 'Placeholder Mismatches', hint: 'Target values missing placeholders from the source locale.' },
+  { code: 'i18ntk.invalidKeyName', label: 'Invalid Key Names', hint: 'Keys that do not match the configured key style.' },
+  { code: 'i18ntk.unusedKey', label: 'Unused Keys', hint: 'Source-locale keys that do not appear in scanned source usage.' },
+  { code: 'i18ntk.riskyContent', label: 'Risky Content', hint: 'Advisory checks for untranslated values, URLs, HTML, escapes, or long values.' },
+  { code: 'i18ntk.expansionRisk', label: 'Expansion Risks', hint: 'Advisory checks for translated values much longer than source values.' }
 ];
 
 function textField(id: string, label: string, value: string, hint: string): string {
