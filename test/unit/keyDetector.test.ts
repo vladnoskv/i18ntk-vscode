@@ -37,6 +37,22 @@ test('findTranslationKeys detects configured custom wrappers', () => {
   assert.deepEqual(keys, ['dashboard.title']);
 });
 
+test('findTranslationKeys ignores non-translation function and method string arguments', () => {
+  const source = [
+    'const next = searchParams.get("next");',
+    'window.localStorage.setItem("pending", "1");',
+    'settingsRes.headers.get("etag");',
+    'clearWaitlist("pending");',
+    'clearWaitlist("admin.panel");',
+    'response.headers.set("Clear-Site-Data", "\\"cache\\", \\"storage\\"");',
+    'const title = t("checkout.payment.title");'
+  ].join('\n');
+
+  const keys = findTranslationKeys(source).map((item) => item.key);
+
+  assert.deepEqual(keys, ['checkout.payment.title']);
+});
+
 test('findTranslationKeys detects imported locale object property reads', () => {
   const source = [
     'import common from "../locales/en/common.json";',

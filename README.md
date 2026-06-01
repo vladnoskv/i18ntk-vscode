@@ -12,6 +12,12 @@ i18ntk Workbench gives i18n projects a focused VS Code control center: scan loca
 
 It is the full VS Code companion to the zero-dependency `i18ntk` npm package. Workbench owns the i18ntk Activity Bar sidebar; when i18ntk Lens is installed too, Lens stays inline-only with hovers, CodeLens, diagnostics, commands, and settings.
 
+## Latest in 1.0.3
+
+- Source scans no longer treat arbitrary function calls or methods like `get("next")`, `headers.get("etag")`, or `clearWaitlist("admin.panel")` as translation keys.
+- Invalid-key diagnostics allow hybrid dot-path plus snake_case segment keys while still rejecting malformed separators and uppercase segments.
+- Unused-key reports are advisory; verify usages before deleting locale keys.
+
 ## Latest in 1.0.2
 
 - Report webviews now include issue filtering and per-issue copy buttons.

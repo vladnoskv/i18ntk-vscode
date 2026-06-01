@@ -276,8 +276,8 @@ export class WorkspaceScanner {
 }
 
 function matchesStyle(key: string, style: ResolvedI18ntkConfig['keyStyle']): boolean {
-  if (style === 'dot') return /^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)*$/.test(key);
-  if (style === 'snake') return /^[a-z0-9_]+$/.test(key);
+  const hybridDotSnake = /^[a-z0-9]+(?:_[a-z0-9]+)*(?:\.[a-z0-9]+(?:_[a-z0-9]+)*)*$/;
+  if (style === 'dot' || style === 'snake') return hybridDotSnake.test(key);
   if (style === 'camel') return /^[a-z][a-zA-Z0-9]*$/.test(key);
   if (style === 'kebab') return /^[a-z0-9-]+$/.test(key);
   return !key.includes('.');

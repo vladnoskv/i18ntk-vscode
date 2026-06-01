@@ -42,8 +42,6 @@ function buildPatterns(customWrappers: string[]): { pattern: RegExp; keyIndex: n
   return staticPatterns;
 }
 
-const GENERIC_KEY_PATTERN = /\b[a-zA-Z_$][\w$]*\s*\(\s*(['"`])([a-z][a-zA-Z0-9]*(?:\.[a-z][a-zA-Z0-9]*)+)\1/g;
-
 export function findTranslationKeys(text: string, customWrappers: string[] = []): TranslationKeyMatch[] {
   const matches: TranslationKeyMatch[] = [];
   const patterns = buildPatterns(customWrappers);
@@ -61,20 +59,6 @@ export function findTranslationKeys(text: string, customWrappers: string[] = [])
         range: rangeFromOffsets(text, keyStart, keyEnd)
       });
     }
-  }
-  GENERIC_KEY_PATTERN.lastIndex = 0;
-  let gMatch: RegExpExecArray | null;
-  while ((gMatch = GENERIC_KEY_PATTERN.exec(text)) !== null) {
-    const key = gMatch[2];
-    if (/^(if|for|while|return|function|class|const|let|var|import|export|new|typeof|instanceof|delete|void|in|of|else|try|catch|throw)$/.test(key)) continue;
-    const keyStart = gMatch.index + gMatch[0].indexOf(key);
-    const keyEnd = keyStart + key.length;
-    matches.push({
-      key,
-      start: keyStart,
-      end: keyEnd,
-      range: rangeFromOffsets(text, keyStart, keyEnd)
-    });
   }
   for (const [name, namespace] of findImportedLocaleObjects(text)) {
     matches.push(...findImportedLocaleObjectReads(text, name, namespace));

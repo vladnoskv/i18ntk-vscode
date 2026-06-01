@@ -74,3 +74,36 @@ test('WorkspaceScanner treats imported namespace object property reads as used k
   assert.deepEqual(result.missingKeys, []);
   assert.deepEqual(result.unusedKeys.map((item) => item.key), ['unused']);
 });
+
+test('WorkspaceScanner accepts dot paths with snake_case segments for invalid-key diagnostics', async () => {
+  const rootPath = await fs.mkdtemp(path.join(os.tmpdir(), 'i18ntk-workbench-'));
+  await fs.mkdir(path.join(rootPath, 'locales'), { recursive: true });
+  await fs.mkdir(path.join(rootPath, 'src'), { recursive: true });
+  await fs.writeFile(path.join(rootPath, 'locales', 'en.json'), JSON.stringify({
+    home: { header: { nav: { my_duels: 'My duels' } } },
+    markets: { detail: { prediction_summary: { sign_in_prompt: 'Sign in' } } },
+    coming_soon: { form: { full_name_placeholder: 'Full name' } },
+    Bad: { Key: 'Bad' }
+  }));
+  await fs.writeFile(path.join(rootPath, 'src', 'App.tsx'), 'export const App = () => null;');
+
+  const scanner = new WorkspaceScanner(new ConsoleLogger());
+  const result = await scanner.scan(rootPath, {
+    rootPath,
+    localeDirectory: path.join(rootPath, 'locales'),
+    sourceLocale: 'en',
+    keyStyle: 'dot',
+    autoScanOnSave: false,
+    showInlineDiagnostics: true,
+    showHoverTranslations: true,
+    reportFormat: 'webview',
+    maxScanFiles: 5000,
+    exclude: ['node_modules', '.git', 'dist', 'build', 'coverage'],
+    customWrappers: [],
+    autoTranslateProvider: 'google',
+    autoTranslateTargets: [],
+    autoTranslateMode: 'onlyMissing'
+  });
+
+  assert.deepEqual(result.invalidKeyNames.map((item) => item.key), ['Bad.Key']);
+});

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.3 - 2026-06-01
+
+- Removed generic function-call key extraction so ordinary app calls such as `get("next")`, `headers.get("etag")`, and `clearWaitlist("admin.panel")` are not reported as missing translation keys.
+- Invalid-key diagnostics now allow hybrid dot-path plus snake_case segment keys, while malformed separators and uppercase segments remain invalid.
+- Kept explicit translation wrappers, configured custom wrappers, JSX i18n attributes, and imported locale-object reads as supported usage signals.
+- Documented that unused-key reports are advisory and should not be used for bulk deletion without verification.
+
 ## 1.0.2 - 2026-05-31
 
 - Added issue filtering and per-issue copy actions to the Workbench report webview.
