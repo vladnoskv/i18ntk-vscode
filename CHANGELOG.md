@@ -1,8 +1,12 @@
 # Changelog
 
-## 1.0.3 - 2026-06-01
+## 1.0.4 - 2026-06-01
 
 - Removed generic function-call key extraction so ordinary app calls such as `get("next")`, `headers.get("etag")`, and `clearWaitlist("admin.panel")` are not reported as missing translation keys.
+- Reduced unused-key false positives by treating exact source string and template literals that match known locale keys as usages.
+- Added exact locale JSON key ranges for unused keys, placeholder mismatches, invalid key names, risky content, and expansion warnings.
+- Added Problems/editor quick fixes to open any i18ntk diagnostic key in locale files, while keeping the missing-key add action.
+- Added optional locale JSON key color-coding with `i18ntk.highlightLocaleKeys` and the Workbench settings panel toggle.
 - Invalid-key diagnostics now allow hybrid dot-path plus snake_case segment keys, while malformed separators and uppercase segments remain invalid.
 - Kept explicit translation wrappers, configured custom wrappers, JSX i18n attributes, and imported locale-object reads as supported usage signals.
 - Documented that unused-key reports are advisory and should not be used for bulk deletion without verification.

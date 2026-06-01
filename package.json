@@ -2,7 +2,7 @@
   "name": "i18ntk-workbench",
   "displayName": "i18ntk Workbench",
   "description": "VS Code workbench for i18ntk projects: setup, scanning, validation, usage reports, key management, and CLI-backed Auto Translate.",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "publisher": "VladNoskov",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -78,6 +78,11 @@
           "type": "boolean",
           "default": true,
           "description": "Show locale values when hovering over detected translation keys."
+        },
+        "i18ntk.highlightLocaleKeys": {
+          "type": "boolean",
+          "default": true,
+          "description": "Color-code keys in scanned locale JSON files by nesting depth."
         },
         "i18ntk.reportFormat": {
           "type": "string",

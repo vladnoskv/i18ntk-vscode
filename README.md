@@ -12,9 +12,13 @@ i18ntk Workbench gives i18n projects a focused VS Code control center: scan loca
 
 It is the full VS Code companion to the zero-dependency `i18ntk` npm package. Workbench owns the i18ntk Activity Bar sidebar; when i18ntk Lens is installed too, Lens stays inline-only with hovers, CodeLens, diagnostics, commands, and settings.
 
-## Latest in 1.0.3
+## Latest in 1.0.4
 
 - Source scans no longer treat arbitrary function calls or methods like `get("next")`, `headers.get("etag")`, or `clearWaitlist("admin.panel")` as translation keys.
+- Exact source string and template literals that match known locale keys now count as usages, reducing false unused-key reports for event/status keys such as `duel.created`.
+- Locale JSON diagnostics now point at the exact nested key line for unused keys, placeholder mismatches, invalid key names, risky content, and expansion warnings.
+- i18ntk Problems quick fixes can open the affected key in locale files; missing-key diagnostics still include the add-key action.
+- Scanned locale JSON files can color-code key names by nesting depth with `i18ntk.highlightLocaleKeys`.
 - Invalid-key diagnostics allow hybrid dot-path plus snake_case segment keys while still rejecting malformed separators and uppercase segments.
 - Unused-key reports are advisory; verify usages before deleting locale keys.
 
@@ -65,8 +69,9 @@ Requirements:
 - **Locale Health sidebar**: scan, refresh, report, setup, settings, and action groups in one Activity Bar view.
 - **Workspace setup**: auto-detects common and nested locale roots, then prompts when setup is incomplete.
 - **Diagnostics**: missing keys, placeholder mismatches, invalid key names, unused keys, risky content, and expansion warnings.
+- **Locale JSON key highlighting**: optional color-coding for scanned locale keys by nesting depth.
 - **Hover translations**: shows locale values for `t("key")`, `i18n.t(...)`, `translate(...)`, `$t(...)`, and configured custom wrappers.
-- **Quick Fix: Add missing key**: inserts missing keys into JSON locale files while preserving formatting.
+- **Quick fixes**: add missing keys or open any i18ntk diagnostic key in locale files from the editor or Problems panel.
 - **Summary report**: validate, analyze usage, Auto Translate, filter issues, copy individual issues, open files, add keys, copy Markdown, save reports, and open settings.
 - **CLI-backed Auto Translate**: runs local `i18ntk-translate` with non-interactive, placeholder-safe defaults.
 - **Local-first behavior**: no telemetry; provider network calls happen only when you explicitly run Auto Translate.
@@ -98,6 +103,7 @@ Requirements:
 | `i18ntk.autoScanOnSave` | boolean | `false` | Run a debounced scan after file saves. |
 | `i18ntk.showInlineDiagnostics` | boolean | `true` | Show locale diagnostics in editors. |
 | `i18ntk.showHoverTranslations` | boolean | `true` | Show locale values when hovering over translation keys. |
+| `i18ntk.highlightLocaleKeys` | boolean | `true` | Color-code keys in scanned locale JSON files by nesting depth. |
 | `i18ntk.reportFormat` | enum | `"webview"` | Preferred report presentation: `webview` or `markdown`. |
 | `i18ntk.maxScanFiles` | number | `5000` | Maximum source files to scan. |
 | `i18ntk.exclude` | array | `["node_modules", ".next", "dist", "build", "coverage"]` | Folders excluded from scans. |
@@ -157,7 +163,25 @@ locales/en.json
 locales/fr.json
 ```
 
-Nested JSON keys are flattened to dot notation. For example, `checkout.payment.title` maps to deeply nested JSON.
+Nested JSON keys are flattened to dot notation. Snake_case segments inside those dot paths are valid when `i18ntk.keyStyle` is `dot` or `snake`.
+For example, this layout produces keys such as `history.filters.symbol_placeholder`, `history.filters.asset_classes.event`, and `history.table.close_utc`:
+
+```json
+{
+  "history": {
+    "filters": {
+      "symbol_placeholder": "Symbol (BTC, AAPL, EURUSD)",
+      "asset_classes": {
+        "event": "Event",
+        "crypto": "Crypto"
+      }
+    },
+    "table": {
+      "close_utc": "Close (UTC)"
+    }
+  }
+}
+```
 
 ## Workbench and Lens
 

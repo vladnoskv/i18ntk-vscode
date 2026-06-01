@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { LocaleFileInfo, ResolvedI18ntkConfig } from '../types';
-import { flattenJson, insertKeyValue, readJsonWithFormatting, shouldUseNestedInsertion, stringifyJson } from '../utils/jsonUtils';
+import { collectJsonKeyRanges, flattenJson, insertKeyValue, readJsonWithFormatting, shouldUseNestedInsertion, stringifyJson } from '../utils/jsonUtils';
 
 export interface LoadedLocaleFile extends LocaleFileInfo {
   data: Record<string, unknown>;
@@ -77,7 +77,8 @@ export class LocaleFileService {
       const content = await fs.promises.readFile(filePath, 'utf8');
       const data = JSON.parse(content) as Record<string, unknown>;
       const values = flattenJson(data);
-      return { locale, namespace, filePath, keys: Object.keys(values), data, values };
+      const keyRanges = collectJsonKeyRanges(content);
+      return { locale, namespace, filePath, keys: Object.keys(values), keyRanges, data, values };
     } catch {
       return undefined;
     }

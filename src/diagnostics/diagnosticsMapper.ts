@@ -30,7 +30,7 @@ export function mapScanResultToDiagnostics(result: I18nScanResult): DiagnosticLi
     if (!issue.filePath) continue;
     diagnostics.push({
       filePath: issue.filePath,
-      range: DEFAULT_RANGE,
+      range: issue.range ?? DEFAULT_RANGE,
       severity: issue.missing.length > 0 ? 'error' : 'warning',
       message: `Placeholder mismatch for "${issue.key}": target is missing ${issue.missing.join(', ') || 'no placeholders'}`,
       code: 'i18ntk.placeholderMismatch',
@@ -42,7 +42,7 @@ export function mapScanResultToDiagnostics(result: I18nScanResult): DiagnosticLi
     if (!issue.filePath) continue;
     diagnostics.push({
       filePath: issue.filePath,
-      range: DEFAULT_RANGE,
+      range: issue.range ?? DEFAULT_RANGE,
       severity: 'warning',
       message: `Translation key "${issue.key}" does not match configured key style "${issue.expectedStyle}".`,
       code: 'i18ntk.invalidKeyName',
@@ -54,11 +54,35 @@ export function mapScanResultToDiagnostics(result: I18nScanResult): DiagnosticLi
     if (!issue.filePath) continue;
     diagnostics.push({
       filePath: issue.filePath,
-      range: DEFAULT_RANGE,
+      range: issue.range ?? DEFAULT_RANGE,
       severity: 'info',
       message: `Translation key "${issue.key}" appears unused.`,
       code: 'i18ntk.unusedKey',
       data: { key: issue.key }
+    });
+  }
+
+  for (const issue of result.riskyContent) {
+    if (!issue.filePath) continue;
+    diagnostics.push({
+      filePath: issue.filePath,
+      range: issue.range ?? DEFAULT_RANGE,
+      severity: issue.severity,
+      message: issue.message,
+      code: 'i18ntk.riskyContent',
+      data: { key: issue.key, locale: issue.locale }
+    });
+  }
+
+  for (const issue of result.expansionRisks) {
+    if (!issue.filePath) continue;
+    diagnostics.push({
+      filePath: issue.filePath,
+      range: issue.range ?? DEFAULT_RANGE,
+      severity: 'info',
+      message: `Translation value for "${issue.key}" expands by ${issue.expansionPercent}%.`,
+      code: 'i18ntk.expansionRisk',
+      data: { key: issue.key, locale: issue.locale }
     });
   }
 

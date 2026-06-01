@@ -7,6 +7,7 @@ import { registerOpenReportCommand } from './commands/openReportCommand';
 import { openKeyInLocaleFilesCommand } from './commands/openKeyInLocaleFilesCommand';
 import { registerRefreshTreeCommand } from './commands/refreshTreeCommand';
 import { registerScanWorkspaceCommand, ScanState } from './commands/scanWorkspaceCommand';
+import { LocaleKeyDecorationProvider } from './decorations/localeKeyDecorationProvider';
 import { DiagnosticsProvider } from './diagnostics/diagnosticsProvider';
 import { TranslationHoverProvider } from './hover/translationHoverProvider';
 import { LocalI18ntkAdapter } from './services/i18ntkAdapter';
@@ -24,18 +25,20 @@ export function activate(context: vscode.ExtensionContext): void {
   const adapter = new LocalI18ntkAdapter(scanner, logger);
   const state: ScanState = {};
   const diagnostics = new DiagnosticsProvider();
+  const localeKeyDecorations = new LocaleKeyDecorationProvider();
   const treeProvider = new LocaleHealthTreeProvider();
   const keyUsage = new KeyUsageService();
   const reportPanel = new ReportWebviewPanel(context, async () => {
     await vscode.commands.executeCommand('i18ntk.scanWorkspace');
   });
 
-  context.subscriptions.push(outputChannel, diagnostics);
+  context.subscriptions.push(outputChannel, diagnostics, localeKeyDecorations);
   vscode.window.registerTreeDataProvider('i18ntk.localeHealth', treeProvider);
 
   const handleScanResult = (result: any) => {
     keyUsage.update(result);
     treeProvider.setResult(result);
+    localeKeyDecorations.update(result);
     if (vscode.workspace.getConfiguration('i18ntk').get('showInlineDiagnostics', true)) {
       diagnostics.update(result);
     }

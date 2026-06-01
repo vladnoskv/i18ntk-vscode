@@ -47,6 +47,7 @@ export class WorkbenchSettingsPanel {
       autoScanOnSave: config.get('autoScanOnSave', false),
       showInlineDiagnostics: config.get('showInlineDiagnostics', true),
       showHoverTranslations: config.get('showHoverTranslations', true),
+      highlightLocaleKeys: config.get('highlightLocaleKeys', true),
       reportFormat: config.get('reportFormat', 'webview'),
       maxScanFiles: config.get('maxScanFiles', 5000),
       exclude: config.get('exclude', ['node_modules', '.next', 'dist', 'build', 'coverage']) as string[],
@@ -131,6 +132,7 @@ export class WorkbenchSettingsPanel {
   <label><input type="checkbox" id="autoScanOnSave" ${model.autoScanOnSave ? 'checked' : ''}>Auto-scan on save</label>
   <label><input type="checkbox" id="showInlineDiagnostics" ${model.showInlineDiagnostics ? 'checked' : ''}>Show inline diagnostics</label>
   <label><input type="checkbox" id="showHoverTranslations" ${model.showHoverTranslations ? 'checked' : ''}>Show hover translations</label>
+  <label><input type="checkbox" id="highlightLocaleKeys" ${model.highlightLocaleKeys ? 'checked' : ''}>Color-code locale JSON keys</label>
   <h2>Auto Translate</h2>
   <section class="grid">
     ${selectField('autoTranslateProvider', 'Provider', model.autoTranslateProvider, ['google', 'deepl', 'libretranslate'], 'DeepL and LibreTranslate may require environment configuration in the CLI.')}
@@ -180,6 +182,7 @@ export class WorkbenchSettingsPanel {
         autoScanOnSave: document.getElementById('autoScanOnSave').checked,
         showInlineDiagnostics: document.getElementById('showInlineDiagnostics').checked,
         showHoverTranslations: document.getElementById('showHoverTranslations').checked,
+        highlightLocaleKeys: document.getElementById('highlightLocaleKeys').checked,
         autoTranslateProvider: document.getElementById('autoTranslateProvider').value,
         autoTranslateMode: document.getElementById('autoTranslateMode').value,
         autoTranslateTargets: document.getElementById('autoTranslateTargets').value.split(',').map(v => v.trim()).filter(Boolean),
@@ -256,6 +259,7 @@ const SETTINGS_KEYS = [
   'autoScanOnSave',
   'showInlineDiagnostics',
   'showHoverTranslations',
+  'highlightLocaleKeys',
   'autoTranslateProvider',
   'autoTranslateMode',
   'autoTranslateTargets',

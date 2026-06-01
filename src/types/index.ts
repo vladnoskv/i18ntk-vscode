@@ -31,6 +31,7 @@ export interface LocaleFileInfo {
   namespace: string;
   filePath: string;
   keys: string[];
+  keyRanges?: Record<string, TextRange>;
 }
 
 export interface TranslationKeyUsage {
@@ -55,12 +56,14 @@ export interface PlaceholderMismatchIssue {
   missing: string[];
   extra: string[];
   filePath?: string;
+  range?: TextRange;
 }
 
 export interface UnusedKeyIssue {
   key: string;
   locale: string;
   filePath?: string;
+  range?: TextRange;
   confidence: number;
 }
 
@@ -68,12 +71,14 @@ export interface InvalidKeyNameIssue {
   key: string;
   expectedStyle: string;
   filePath?: string;
+  range?: TextRange;
 }
 
 export interface RiskyContentIssue {
   key: string;
   locale: string;
   filePath?: string;
+  range?: TextRange;
   message: string;
   severity: 'info' | 'warning' | 'error';
 }
@@ -85,6 +90,7 @@ export interface ExpansionRiskIssue {
   targetLength: number;
   expansionPercent: number;
   filePath?: string;
+  range?: TextRange;
 }
 
 export interface I18nScanResult {
