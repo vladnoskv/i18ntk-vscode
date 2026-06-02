@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.5 - 2026-06-01
+## 1.1.0 - 2026-06-02
 
 - Removed generic function-call key extraction so ordinary app calls such as `get("next")`, `headers.get("etag")`, and `clearWaitlist("admin.panel")` are not reported as missing translation keys.
 - Matched i18ntk Lens source detection for dynamic template prefixes, statically resolved template values, scoped namespace helpers, imported locale objects, and explicit/custom wrappers.

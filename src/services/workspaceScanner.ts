@@ -1,6 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { findTranslationKeys, findClientBoundaryLocaleImports, detectSuspectedCopyFormatters } from '../hover/keyDetector';
+
+function normalizeWithinRoot(root: string, ...segments: string[]): string {
+  const resolved = path.resolve(root, ...segments);
+  const relative = path.relative(path.resolve(root), resolved);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    return path.resolve(root, path.basename(segments[segments.length - 1] || ''));
+  }
+  return resolved;
+}
 import { comparePlaceholders } from '../utils/placeholderUtils';
 import { findFiles } from '../utils/fsUtils';
 import {
@@ -307,10 +316,12 @@ export class WorkspaceScanner {
   }
 
   private async collectAutoTranslateResiduals(rootPath: string, localeFiles: Array<{ locale: string; filePath: string; keys: string[]; keyRanges?: Record<string, TextRange> }>) {
-    const reportPath = path.join(rootPath, 'i18ntk-reports', 'auto-translate', 'latest.json');
+    const reportPath = normalizeWithinRoot(rootPath, 'i18ntk-reports', 'auto-translate', 'latest.json');
     let parsed: any;
     try {
-      parsed = JSON.parse(await fs.promises.readFile(reportPath, 'utf8'));
+      const content = await fs.promises.readFile(reportPath, 'utf8');
+      if (content.length > 50 * 1024 * 1024) return [];
+      parsed = JSON.parse(content);
     } catch {
       return [];
     }

@@ -42,6 +42,9 @@ export class LocaleFileService {
 
   async addKey(config: ResolvedI18ntkConfig, locale: string, key: string, value: string): Promise<string> {
     const localePath = await this.resolveWritableLocaleFile(config, locale);
+    if (!this.isPathWithinRoot(localePath, config.localeDirectory)) {
+      throw new Error(`Locale file path is outside the configured locale directory.`);
+    }
     let content = '{}\n';
     try {
       content = await fs.promises.readFile(localePath, 'utf8');
@@ -53,6 +56,15 @@ export class LocaleFileService {
     const next = insertKeyValue(parsed.data, key, value, nested);
     await fs.promises.writeFile(localePath, stringifyJson(next, parsed.indent, parsed.eol), 'utf8');
     return localePath;
+  }
+
+  private isPathWithinRoot(target: string, root: string): boolean {
+    try {
+      const relative = path.relative(path.resolve(root), path.resolve(target));
+      return !relative.startsWith('..') && !path.isAbsolute(relative);
+    } catch {
+      return false;
+    }
   }
 
   private async resolveWritableLocaleFile(config: ResolvedI18ntkConfig, locale: string): Promise<string> {
@@ -75,6 +87,7 @@ export class LocaleFileService {
   private async load(locale: string, namespace: string, filePath: string): Promise<LoadedLocaleFile | undefined> {
     try {
       const content = await fs.promises.readFile(filePath, 'utf8');
+      if (content.length > 10 * 1024 * 1024) return undefined;
       const data = JSON.parse(content) as Record<string, unknown>;
       const values = flattenJson(data);
       const keyRanges = collectJsonKeyRanges(content);
