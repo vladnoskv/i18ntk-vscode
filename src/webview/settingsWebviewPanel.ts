@@ -292,7 +292,8 @@ const DEFAULT_DIAGNOSTIC_SEVERITIES: Record<string, string> = {
   'i18ntk.invalidKeyName': 'warning',
   'i18ntk.unusedKey': 'warning',
   'i18ntk.riskyContent': 'warning',
-  'i18ntk.expansionRisk': 'off'
+  'i18ntk.expansionRisk': 'off',
+  'i18ntk.autoTranslateResidual': 'warning'
 };
 
 const DIAGNOSTIC_RULES = [
@@ -301,7 +302,8 @@ const DIAGNOSTIC_RULES = [
   { code: 'i18ntk.invalidKeyName', label: 'Invalid Key Names', hint: 'Keys that do not match the configured key style.' },
   { code: 'i18ntk.unusedKey', label: 'Unused Keys', hint: 'Source-locale keys that do not appear in scanned source usage.' },
   { code: 'i18ntk.riskyContent', label: 'Risky Content', hint: 'Advisory checks for untranslated values, URLs, HTML, escapes, or long values.' },
-  { code: 'i18ntk.expansionRisk', label: 'Expansion Risks', hint: 'Advisory checks for translated values much longer than source values.' }
+  { code: 'i18ntk.expansionRisk', label: 'Expansion Risks', hint: 'Advisory checks for translated values much longer than source values.' },
+  { code: 'i18ntk.autoTranslateResidual', label: 'Auto Translate Residuals', hint: 'Keys left unresolved by Auto Translate after targeted retry.' }
 ];
 
 function textField(id: string, label: string, value: string, hint: string): string {

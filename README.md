@@ -24,6 +24,7 @@ It is the full VS Code companion to the zero-dependency `i18ntk` npm package. Wo
 - Scanned locale JSON files can color-code key names by nesting depth with `i18ntk.highlightLocaleKeys`.
 - Invalid-key diagnostics allow hybrid dot-path plus snake_case segment keys while still rejecting malformed separators and uppercase segments.
 - Unused-key reports are advisory; verify usages before deleting locale keys.
+- Auto Translate residual reports are picked up from `i18ntk-reports/auto-translate/latest.json`, shown in Problems and the report webview, and include a quick action to add intentionally unchanged keys to Auto Translate protection.
 
 ## Latest in 1.0.2
 
@@ -71,12 +72,12 @@ Requirements:
 
 - **Locale Health sidebar**: scan, refresh, report, setup, settings, and action groups in one Activity Bar view.
 - **Workspace setup**: auto-detects common and nested locale roots, then prompts when setup is incomplete.
-- **Diagnostics**: missing keys, placeholder mismatches, invalid key names, unused keys, risky content, and expansion warnings.
+- **Diagnostics**: missing keys, placeholder mismatches, invalid key names, unused keys, risky content, expansion warnings, and Auto Translate residuals.
 - **Diagnostic controls**: configure each i18ntk Problem as error, warning, off, or ignore; right-click a Problem to ignore one diagnostic or turn off its rule.
 - **Locale JSON key highlighting**: optional color-coding for scanned locale keys by nesting depth.
 - **Hover translations**: shows locale values for `t("key")`, `i18n.t(...)`, `translate(...)`, `$t(...)`, and configured custom wrappers.
-- **Quick fixes**: add missing keys or open any i18ntk diagnostic key in locale files from the editor or Problems panel.
-- **Summary report**: validate, analyze usage, Auto Translate, filter issues, copy individual issues, open files, add keys, copy Markdown, save reports, and open settings.
+- **Quick fixes**: add missing keys, open any i18ntk diagnostic key in locale files, or add Auto Translate residual keys to protection from the editor or Problems panel.
+- **Summary report**: validate, analyze usage, Auto Translate, filter issues, copy individual issues, open files, add keys, review Auto Translate residuals, copy Markdown, save reports, and open settings.
 - **CLI-backed Auto Translate**: runs local `i18ntk-translate` with non-interactive, placeholder-safe defaults.
 - **Local-first behavior**: no telemetry; provider network calls happen only when you explicitly run Auto Translate.
 
@@ -88,6 +89,7 @@ Requirements:
 | `i18ntk: Refresh Locale Health` | Refreshes the sidebar tree view. | No file changes. |
 | `i18ntk: Open Summary Report` | Opens the report webview with validation, usage, issue, and workflow actions. | Only writes when you choose an action such as save report, add key, or Auto Translate. |
 | `i18ntk: Add Missing Key` | Adds a translation key to locale JSON files. | Locale JSON files. |
+| `i18ntk: Add Key to Auto Translate Protection` | Adds a translation key to `i18ntk-auto-translate.json` so Auto Translate keeps it unchanged. | Auto Translate protection file. |
 | `i18ntk: Auto Translate Missing` | Runs local `i18ntk-translate` for selected target locales. | Target locale JSON files and CLI report output. |
 | `i18ntk: Validate Locales` | Re-scans and prints validation issues in the Output panel. | No file changes. |
 | `i18ntk: Analyze Usage` | Re-scans and prints usage, missing, unused, placeholder, expansion, and health totals. | No file changes. |
@@ -128,7 +130,8 @@ Default diagnostic rule settings:
     "i18ntk.invalidKeyName": "warning",
     "i18ntk.unusedKey": "warning",
     "i18ntk.riskyContent": "warning",
-    "i18ntk.expansionRisk": "off"
+    "i18ntk.expansionRisk": "off",
+    "i18ntk.autoTranslateResidual": "warning"
   }
 }
 ```
@@ -147,6 +150,8 @@ Workbench runs Auto Translate with:
 - `--preserve-placeholders` so placeholders are protected.
 - `--only-missing` by default so existing translated values are kept.
 - `--report-stdout` so run output is visible in the i18ntk Workbench Output channel.
+
+If Auto Translate cannot fully clear a value after its final targeted retry, the CLI writes `i18ntk-reports/auto-translate/latest.json`. Workbench reads that file on scan, shows each residual key in Problems and the summary report, and provides a quick fix/button to add the key to `i18ntk-auto-translate.json` protection when the value should intentionally stay unchanged.
 
 Auto Translate is currently wired for directory-per-locale layouts:
 

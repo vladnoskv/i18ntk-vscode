@@ -12,6 +12,12 @@ export interface TranslationKeyMatch {
 type KeyFormat = 'dot' | 'snake';
 
 const KNOWN_WRAPPERS = ['t', 'i18n.t', 'translate', '$t', 'tx', '__', '_t', '__t', 'i18n'];
+const DEFAULT_COPY_FORMATTERS = ['copy', 'formatCopy', 'formatMessage', 'fmt'];
+let copyFormatters = new Set(DEFAULT_COPY_FORMATTERS);
+
+export function setCopyFormatters(names: string[]): void {
+  copyFormatters = new Set(names);
+}
 const NAMESPACE_HELPERS = [
   'useTranslations',
   'getTranslations',
@@ -263,6 +269,43 @@ function findImportedLocaleObjects(text: string): Map<string, string> {
     if (namespace) imports.set(match[1], namespace);
   }
   return imports;
+}
+
+export function findClientBoundaryLocaleImports(text: string): Array<{ importPath: string; message: string }> {
+  const issues: Array<{ importPath: string; message: string }> = [];
+  const isClient = /['"]use client['"]/.test(text) || /['"]use client['"]/.test(String(text || '').slice(0, 200));
+  if (!isClient) return issues;
+  const importPattern = /\bimport\s+\w+\s+from\s+['"]([^'"]+\.json)['"]/g;
+  let match;
+  while ((match = importPattern.exec(text)) !== null) {
+    if (/\b(locales?|i18n|translations?)\b/i.test(match[1])) {
+      issues.push({
+        importPath: match[1],
+        message: `"use client" file imports locale JSON (${match[1]}). This bypasses the translation runtime and increases client bundle size. Use a server bridge route instead.`,
+      });
+    }
+  }
+  return issues;
+}
+
+export function detectSuspectedCopyFormatters(text: string): Array<{ name: string; line: number; type: string; message: string }> {
+  const formatters: Array<{ name: string; line: number; type: string; message: string }> = [];
+  const declarationPattern = /\b(?:const|let|var)\s+(tx)\s*=\s*(?:useCallback\s*\(|useMemo\s*\(|\([^)]*\)\s*=>|function\s*\()/g;
+  let match;
+  while ((match = declarationPattern.exec(text)) !== null) {
+    const afterEquals = text.slice(match.index + match[0].length, Math.min(match.index + match[0].length + 500, text.length));
+    const callsTranslationRuntime = /\b(?:t|i18n\.t|\.getTranslation|translate)\s*\(/.test(afterEquals);
+    if (!callsTranslationRuntime) {
+      const before = text.slice(0, match.index);
+      formatters.push({
+        name: 'tx',
+        line: before.split(/\r?\n/).length,
+        type: 'suspectedCopyFormatter',
+        message: `Local function "tx" does not call a known translation runtime and may be a copy formatter. Rename to "copy" or configure "copyFormatters" in .i18ntk-config to suppress.`,
+      });
+    }
+  }
+  return formatters;
 }
 
 function namespaceFromImport(localName: string, specifier: string): string | undefined {

@@ -7,6 +7,8 @@ import { I18nReport, I18nScanResult } from '../types';
 export interface ScanState {
   result?: I18nScanResult;
   report?: I18nReport;
+  onClearDiagnostics?: () => void;
+  onScanStart?: () => void;
 }
 
 export async function scanWorkspaceCommand(
@@ -28,6 +30,7 @@ export async function scanWorkspaceCommand(
   }, async (progress: vscode.Progress<{ message?: string }>, token: vscode.CancellationToken) => {
     try {
       const rootPath = folder.uri.fsPath;
+      state.onClearDiagnostics?.();
       token.onCancellationRequested(() => {
         logger.warn('Workspace scan was cancelled.');
         throw new vscode.CancellationError();

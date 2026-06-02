@@ -58,7 +58,11 @@ export function registerAutoTranslateCommand(context: vscode.ExtensionContext, s
         }
       } catch (error) {
         logger.error('Auto Translate failed', error);
-        vscode.window.showErrorMessage(`i18ntk Auto Translate failed: ${error instanceof Error ? error.message : String(error)}`);
+        if (!dryRun) {
+          state.report = undefined;
+          await vscode.commands.executeCommand('i18ntk.scanWorkspace');
+        }
+        vscode.window.showErrorMessage(`i18ntk Auto Translate needs review: ${error instanceof Error ? error.message : String(error)}`);
       }
     });
   }));

@@ -2,7 +2,7 @@
   "name": "i18ntk-workbench",
   "displayName": "i18ntk Workbench",
   "description": "VS Code workbench for i18ntk projects: setup, scanning, validation, usage reports, key management, and CLI-backed Auto Translate.",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "publisher": "VladNoskov",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -92,7 +92,10 @@
             "i18ntk.invalidKeyName": "warning",
             "i18ntk.unusedKey": "warning",
             "i18ntk.riskyContent": "warning",
-            "i18ntk.expansionRisk": "off"
+            "i18ntk.expansionRisk": "off",
+            "i18ntk.autoTranslateResidual": "warning",
+            "i18ntk.clientBoundary": "warning",
+            "i18ntk.copyFormatter": "warning"
           },
           "additionalProperties": {
             "type": "string",
@@ -199,6 +202,11 @@
         "icon": "$(preview)"
       },
       {
+        "command": "i18ntk.addAutoTranslatePlaceholder",
+        "title": "i18ntk: Add Key to Auto Translate Protection",
+        "category": "i18ntk"
+      },
+      {
         "command": "i18ntk.addMissingKey",
         "title": "i18ntk: Add Missing Key",
         "category": "i18ntk"
@@ -278,6 +286,12 @@
         "command": "i18ntk.lensOpenSettings",
         "title": "i18ntk Lens: Open Settings",
         "category": "i18ntk"
+      },
+      {
+        "command": "i18ntk.clearDiagnostics",
+        "title": "i18ntk: Clear Diagnostics",
+        "category": "i18ntk",
+        "icon": "$(clear-all)"
       }
     ],
     "viewsContainers": {

@@ -1,9 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { findTranslationKeys } from '../hover/keyDetector';
+import { findTranslationKeys, findClientBoundaryLocaleImports, detectSuspectedCopyFormatters } from '../hover/keyDetector';
 import { comparePlaceholders } from '../utils/placeholderUtils';
 import { findFiles } from '../utils/fsUtils';
 import {
+  ClientBoundaryIssue,
+  CopyFormatterIssue,
   ExpansionRiskIssue,
   I18nScanResult,
   InvalidKeyNameIssue,
@@ -39,6 +41,19 @@ export class WorkspaceScanner {
     if (token?.isCancellationRequested) throw new (require('vscode') as any).CancellationError();
     const sourceUsages = await this.scanSourceUsages(sourceFiles, config.customWrappers, keyValues, locales, token);
     if (token?.isCancellationRequested) throw new (require('vscode') as any).CancellationError();
+
+    const clientBoundaryIssues: Array<{ filePath: string; importPath: string; message: string }> = [];
+    const copyFormatters: Array<{ filePath: string; name: string; line: number; type: string; message: string }> = [];
+    for (const filePath of sourceFiles) {
+      let content = '';
+      try { content = await fs.promises.readFile(filePath, 'utf8'); } catch { continue; }
+      for (const issue of findClientBoundaryLocaleImports(content)) {
+        clientBoundaryIssues.push({ filePath, ...issue });
+      }
+      for (const formatter of detectSuspectedCopyFormatters(content)) {
+        copyFormatters.push({ filePath, ...formatter });
+      }
+    }
     const allLocaleKeys = new Set<string>();
     Object.values(keyValues).forEach((values) => Object.keys(values).forEach((key) => allLocaleKeys.add(key)));
 
@@ -48,6 +63,7 @@ export class WorkspaceScanner {
     const invalidKeyNames = this.collectInvalidKeyNames(config, allLocaleKeys, localeFiles);
     const riskyContent = this.collectRiskyContent(config, locales, keyValues, localeFiles);
     const expansionRisks = this.collectExpansionRisks(config, locales, keyValues, localeFiles);
+    const autoTranslateResiduals = await this.collectAutoTranslateResiduals(rootPath, localeFiles);
     const healthScore = this.calculateHealthScore(allLocaleKeys.size, missingKeys.length, placeholderMismatches.length, riskyContent.length);
 
     this.logger.info(`Scanned ${sourceFiles.length} source files and ${localeFiles.length} locale files.`);
@@ -71,7 +87,10 @@ export class WorkspaceScanner {
       unusedKeys,
       invalidKeyNames,
       riskyContent,
-      expansionRisks
+      expansionRisks,
+      autoTranslateResiduals,
+      clientBoundaryIssues,
+      copyFormatters
     };
   }
 
@@ -285,6 +304,40 @@ export class WorkspaceScanner {
     if (totalKeys === 0) return 0;
     const penalty = missing * 3 + placeholders * 5 + risky;
     return Math.max(0, Math.min(100, Math.round(100 - (penalty / Math.max(totalKeys, 1)) * 10)));
+  }
+
+  private async collectAutoTranslateResiduals(rootPath: string, localeFiles: Array<{ locale: string; filePath: string; keys: string[]; keyRanges?: Record<string, TextRange> }>) {
+    const reportPath = path.join(rootPath, 'i18ntk-reports', 'auto-translate', 'latest.json');
+    let parsed: any;
+    try {
+      parsed = JSON.parse(await fs.promises.readFile(reportPath, 'utf8'));
+    } catch {
+      return [];
+    }
+    if (parsed?.kind !== 'i18ntk.autoTranslateResiduals' || !Array.isArray(parsed.items)) return [];
+    const locale = String(parsed.targetLang || '').trim();
+    if (!locale) return [];
+    return parsed.items
+      .map((item: any) => {
+        const key = String(item?.keyPath || '').trim();
+        if (!key) return undefined;
+        const fileName = String(item?.fileName || '');
+        const localeFile = localeFiles.find((file) =>
+          file.locale === locale &&
+          file.keys.includes(key) &&
+          (!fileName || path.basename(file.filePath) === fileName)
+        ) ?? localeFiles.find((file) => file.locale === locale && file.keys.includes(key));
+        return {
+          key,
+          locale,
+          value: String(item?.value || ''),
+          reason: String(item?.reason || 'untranslated'),
+          fileName,
+          filePath: localeFile?.filePath,
+          range: localeFile?.keyRanges?.[key]
+        };
+      })
+      .filter(Boolean);
   }
 }
 

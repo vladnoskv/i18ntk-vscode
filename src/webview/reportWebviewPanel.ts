@@ -55,6 +55,9 @@ export class ReportWebviewPanel {
           case 'addMissingKey':
             await vscode.commands.executeCommand('i18ntk.addMissingKey', message.key);
             break;
+          case 'addAutoTranslatePlaceholder':
+            await vscode.commands.executeCommand('i18ntk.addAutoTranslatePlaceholder', message.key);
+            break;
           case 'openSettings':
             await vscode.commands.executeCommand('i18ntk.openSettings');
             break;

@@ -8,7 +8,10 @@ export const DEFAULT_DIAGNOSTIC_SEVERITIES: Record<string, DiagnosticRuleSeverit
   'i18ntk.invalidKeyName': 'warning',
   'i18ntk.unusedKey': 'warning',
   'i18ntk.riskyContent': 'warning',
-  'i18ntk.expansionRisk': 'off'
+  'i18ntk.expansionRisk': 'off',
+  'i18ntk.autoTranslateResidual': 'warning',
+  'i18ntk.clientBoundary': 'warning',
+  'i18ntk.copyFormatter': 'warning'
 };
 
 export function mapScanResultToDiagnostics(result: I18nScanResult, settings: Partial<DiagnosticSettings> = {}): DiagnosticLike[] {
@@ -97,6 +100,41 @@ export function mapScanResultToDiagnostics(result: I18nScanResult, settings: Par
       message: `Translation value for "${issue.key}" expands by ${issue.expansionPercent}%.`,
       code: 'i18ntk.expansionRisk',
       data: { key: issue.key, locale: issue.locale, ignoreId: ignoreId('i18ntk.expansionRisk', issue.key, issue.locale) }
+    });
+  }
+
+  for (const issue of (result.autoTranslateResiduals || [])) {
+    if (!issue.filePath) continue;
+    addDiagnostic({
+      filePath: issue.filePath,
+      range: issue.range ?? DEFAULT_RANGE,
+      severity: 'warning',
+      message: `Auto Translate could not finish "${issue.key}" for ${issue.locale}. Use only-missing Auto Translate to retry this value, or add it to placeholder protection if it should stay unchanged.`,
+      code: 'i18ntk.autoTranslateResidual',
+      data: { key: issue.key, locale: issue.locale, value: issue.value, ignoreId: ignoreId('i18ntk.autoTranslateResidual', issue.key, issue.locale) }
+    });
+  }
+
+  for (const issue of (result.clientBoundaryIssues || [])) {
+    addDiagnostic({
+      filePath: issue.filePath,
+      range: issue.range ?? DEFAULT_RANGE,
+      severity: 'warning',
+      message: issue.message,
+      code: 'i18ntk.clientBoundary',
+      data: { importPath: issue.importPath, ignoreId: ignoreId('i18ntk.clientBoundary', issue.importPath) }
+    });
+  }
+
+  for (const issue of (result.copyFormatters || [])) {
+    const range = issue.range ?? { startLine: issue.line - 1, startCharacter: 0, endLine: issue.line - 1, endCharacter: 1 };
+    addDiagnostic({
+      filePath: issue.filePath,
+      range,
+      severity: 'warning',
+      message: issue.message,
+      code: 'i18ntk.copyFormatter',
+      data: { name: issue.name, line: issue.line, ignoreId: ignoreId('i18ntk.copyFormatter', issue.name, issue.filePath) }
     });
   }
 

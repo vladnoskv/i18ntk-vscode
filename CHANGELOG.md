@@ -14,6 +14,7 @@
 - Kept explicit translation wrappers, configured custom wrappers, JSX i18n attributes, and imported locale-object reads as supported usage signals.
 - When i18ntk Lens is installed, Workbench now leaves inline hovers and diagnostics to Lens while keeping Workbench sidebar, reports, settings, key management, and Auto Translate scans.
 - Documented that unused-key reports are advisory and should not be used for bulk deletion without verification.
+- Auto Translate residual reports from `i18ntk-reports/auto-translate/latest.json` are now picked up during scans, shown in Problems and the report webview, and can be resolved with a quick action that adds the key to Auto Translate protection.
 
 ## 1.0.2 - 2026-05-31
 

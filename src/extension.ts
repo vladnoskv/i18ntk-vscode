@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { MissingKeyCodeActionProvider } from './codeActions/missingKeyCodeActionProvider';
+import { registerAddAutoTranslatePlaceholderCommand } from './commands/addAutoTranslatePlaceholderCommand';
 import { registerAddMissingKeyCommand } from './commands/addMissingKeyCommand';
 import { registerAutoTranslateCommand } from './commands/autoTranslateCommand';
 import { registerConfigureLocaleDirectoryCommands } from './commands/configureLocaleDirectoryCommand';
@@ -54,8 +55,11 @@ export function activate(context: vscode.ExtensionContext): void {
   registerScanWorkspaceCommand(context, adapter, logger, state, (result: any) => {
     handleScanResult(result);
   });
+  // Clear diagnostics before scan starts to prevent stale linting
+  state.onClearDiagnostics = () => diagnostics.update(undefined);
   registerRefreshTreeCommand(context, treeProvider);
   registerOpenReportCommand(context, state, reportPanel);
+  registerAddAutoTranslatePlaceholderCommand(context);
   registerAddMissingKeyCommand(context, state);
   registerAutoTranslateCommand(context, state, logger);
   registerConfigureLocaleDirectoryCommands(context, logger);
@@ -81,6 +85,12 @@ export function activate(context: vscode.ExtensionContext): void {
     severities[code] = severity;
     await config.update('diagnosticSeverities', severities, vscode.ConfigurationTarget.Workspace);
     diagnostics.refresh();
+  }));
+
+  // Clear all i18ntk diagnostics
+  context.subscriptions.push(vscode.commands.registerCommand('i18ntk.clearDiagnostics', () => {
+    diagnostics.update(undefined);
+    vscode.window.showInformationMessage('i18ntk diagnostics cleared. Run Scan Workspace to refresh.');
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('i18ntk.validateLocales', async () => {

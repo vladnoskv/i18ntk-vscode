@@ -2,7 +2,8 @@ import { I18nReport } from '../types';
 
 export function renderReportHtml(report: I18nReport, nonce: string): string {
   const result = report.result;
-  const issueCount = result.missingKeys.length + result.placeholderMismatches.length + result.invalidKeyNames.length + result.riskyContent.length + result.expansionRisks.length;
+  const residuals = result.autoTranslateResiduals ?? [];
+  const issueCount = result.missingKeys.length + result.placeholderMismatches.length + result.invalidKeyNames.length + result.riskyContent.length + result.expansionRisks.length + residuals.length;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -82,6 +83,7 @@ export function renderReportHtml(report: I18nReport, nonce: string): string {
   ${table('Invalid Key Names', ['Key', 'Expected Style', 'File', 'Actions'], result.invalidKeyNames.slice(0, 200).map((item) => [item.key, item.expectedStyle, item.filePath || '-', actions(item.filePath, undefined, false, `Invalid key name ${item.key}; expected ${item.expectedStyle}`)]), result.invalidKeyNames.length)}
   ${table('Risky Content', ['Locale', 'Key', 'Issue', 'File', 'Actions'], result.riskyContent.slice(0, 200).map((item) => [item.locale, item.key, item.message, item.filePath || '-', actions(item.filePath, undefined, false, `Risky content ${item.key} in ${item.locale}: ${item.message}`)]), result.riskyContent.length)}
   ${table('Expansion Risks', ['Locale', 'Key', 'Expansion', 'File', 'Actions'], result.expansionRisks.slice(0, 200).map((item) => [item.locale, item.key, `+${item.expansionPercent}% (${item.sourceLength} -> ${item.targetLength})`, item.filePath || '-', actions(item.filePath, undefined, false, `Expansion risk ${item.key} in ${item.locale}: +${item.expansionPercent}%`)]), result.expansionRisks.length)}
+  ${table('Auto Translate Residuals', ['Locale', 'Key', 'Current Value', 'File', 'Actions'], residuals.slice(0, 200).map((item) => [item.locale, item.key, item.value, item.filePath || '-', actions(item.filePath, item.key, false, `Auto Translate residual ${item.key} in ${item.locale}`, true)]), residuals.length)}
   <h2>Suggested Next Actions</h2>
   <ul>
     <li>Add missing keys for target locales.</li>
@@ -90,6 +92,7 @@ export function renderReportHtml(report: I18nReport, nonce: string): string {
     <li>Address risky content warnings.</li>
     <li>Test expansion risks in constrained layouts.</li>
     <li>Review invalid key names against configured key style.</li>
+    <li>Retry Auto Translate residuals with only-missing mode, or protect keys that should stay unchanged.</li>
   </ul>
   <script nonce="${escapeAttr(nonce)}">
     const vsc = acquireVsCodeApi();
@@ -134,7 +137,7 @@ function table(title: string, headers: string[], rows: string[][], total: number
   return `<h2>${escapeHtml(title)}${more}</h2><div class="table-wrap"><table><thead><tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
-function actions(filePath?: string, key?: string, canAddKey = false, issueText?: string): string {
+function actions(filePath?: string, key?: string, canAddKey = false, issueText?: string, canProtectKey = false): string {
   const buttons: string[] = [];
   if (filePath) {
     buttons.push(`<button class="secondary" data-command="openFile" data-file-path="${escapeAttr(filePath)}">Open File</button>`);
@@ -144,6 +147,9 @@ function actions(filePath?: string, key?: string, canAddKey = false, issueText?:
   }
   if (canAddKey && key) {
     buttons.push(`<button class="secondary" data-command="addMissingKey" data-key="${escapeAttr(key)}">Add Key</button>`);
+  }
+  if (canProtectKey && key) {
+    buttons.push(`<button class="secondary" data-command="addAutoTranslatePlaceholder" data-key="${escapeAttr(key)}">Protect Key</button>`);
   }
   return buttons.length ? buttons.join(' ') : '<span class="empty">No action</span>';
 }

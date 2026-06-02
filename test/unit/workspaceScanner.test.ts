@@ -261,3 +261,43 @@ test('WorkspaceScanner accepts dot paths with snake_case segments for invalid-ke
 
   assert.deepEqual(result.invalidKeyNames.map((item) => item.key), ['Bad.Key']);
 });
+
+test('WorkspaceScanner reports auto translate residuals from the CLI resume report', async () => {
+  const rootPath = await fs.mkdtemp(path.join(os.tmpdir(), 'i18ntk-workbench-'));
+  await fs.mkdir(path.join(rootPath, 'locales', 'en'), { recursive: true });
+  await fs.mkdir(path.join(rootPath, 'locales', 'ar'), { recursive: true });
+  await fs.mkdir(path.join(rootPath, 'src'), { recursive: true });
+  await fs.mkdir(path.join(rootPath, 'i18ntk-reports', 'auto-translate'), { recursive: true });
+  await fs.writeFile(path.join(rootPath, 'locales', 'en', 'home.json'), JSON.stringify({ offer: 'What We Offer' }, null, 2));
+  await fs.writeFile(path.join(rootPath, 'locales', 'ar', 'home.json'), JSON.stringify({ offer: '[AR] What We Offer' }, null, 2));
+  await fs.writeFile(path.join(rootPath, 'src', 'app.ts'), 'const offer = t("offer");');
+  await fs.writeFile(path.join(rootPath, 'i18ntk-reports', 'auto-translate', 'latest.json'), JSON.stringify({
+    kind: 'i18ntk.autoTranslateResiduals',
+    targetLang: 'ar',
+    items: [{ fileName: 'home.json', keyPath: 'offer', value: '[AR] What We Offer' }]
+  }));
+
+  const scanner = new WorkspaceScanner(new ConsoleLogger());
+  const result = await scanner.scan(rootPath, {
+    rootPath,
+    localeDirectory: path.join(rootPath, 'locales'),
+    sourceLocale: 'en',
+    keyStyle: 'dot',
+    autoScanOnSave: false,
+    showInlineDiagnostics: true,
+    showHoverTranslations: true,
+    reportFormat: 'webview',
+    maxScanFiles: 5000,
+    exclude: ['node_modules', '.git', 'dist', 'build', 'coverage'],
+    customWrappers: [],
+    autoTranslateProvider: 'google',
+    autoTranslateTargets: [],
+    autoTranslateMode: 'onlyMissing'
+  });
+
+  assert.deepEqual(result.autoTranslateResiduals!.map((item) => [item.locale, item.key, item.value]), [
+    ['ar', 'offer', '[AR] What We Offer']
+  ]);
+  assert.equal(result.autoTranslateResiduals![0].filePath?.endsWith(path.join('locales', 'ar', 'home.json')), true);
+  assert.deepEqual(result.autoTranslateResiduals![0].range, { startLine: 1, startCharacter: 3, endLine: 1, endCharacter: 8 });
+});

@@ -84,12 +84,37 @@ export interface RiskyContentIssue {
   severity: 'info' | 'warning' | 'error';
 }
 
+export interface ClientBoundaryIssue {
+  filePath: string;
+  range?: TextRange;
+  importPath: string;
+  message: string;
+}
+
+export interface CopyFormatterIssue {
+  filePath: string;
+  range?: TextRange;
+  name: string;
+  line: number;
+  message: string;
+}
+
 export interface ExpansionRiskIssue {
   key: string;
   locale: string;
   sourceLength: number;
   targetLength: number;
   expansionPercent: number;
+  filePath?: string;
+  range?: TextRange;
+}
+
+export interface AutoTranslateResidualIssue {
+  key: string;
+  locale: string;
+  value: string;
+  reason?: string;
+  fileName?: string;
   filePath?: string;
   range?: TextRange;
 }
@@ -115,6 +140,9 @@ export interface I18nScanResult {
   invalidKeyNames: InvalidKeyNameIssue[];
   riskyContent: RiskyContentIssue[];
   expansionRisks: ExpansionRiskIssue[];
+  autoTranslateResiduals?: AutoTranslateResidualIssue[];
+  clientBoundaryIssues?: ClientBoundaryIssue[];
+  copyFormatters?: CopyFormatterIssue[];
 }
 
 export interface I18nValidationResult {

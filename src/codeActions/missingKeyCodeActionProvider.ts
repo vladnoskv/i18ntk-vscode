@@ -20,6 +20,18 @@ export class MissingKeyCodeActionProvider {
         actions.push(action);
       }
 
+      if (diagnostic.code === 'i18ntk.autoTranslateResidual') {
+        const action = new vscode.CodeAction('Add key to Auto Translate placeholder protection', vscode.CodeActionKind.QuickFix);
+        action.diagnostics = [diagnostic];
+        action.isPreferred = true;
+        action.command = {
+          command: 'i18ntk.addAutoTranslatePlaceholder',
+          title: 'Add key to Auto Translate placeholder protection',
+          arguments: [key]
+        };
+        actions.push(action);
+      }
+
       const openAction = new vscode.CodeAction('Open translation key in locale files', vscode.CodeActionKind.QuickFix);
       openAction.diagnostics = [diagnostic];
       openAction.command = {
