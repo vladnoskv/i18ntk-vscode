@@ -15,6 +15,9 @@ export interface ResolvedI18ntkConfig {
   sourceLocale: string;
   keyStyle: 'dot' | 'snake' | 'camel' | 'kebab' | 'flat';
   autoScanOnSave: boolean;
+  autoScanOnFileChange?: boolean;
+  scanOnStartup?: boolean;
+  runCliValidationOnScan?: boolean;
   showInlineDiagnostics: boolean;
   showHoverTranslations: boolean;
   reportFormat: 'webview' | 'markdown';

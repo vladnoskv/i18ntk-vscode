@@ -1,12 +1,13 @@
 import * as vscode from 'vscode';
+import { t } from '../i18ntk/localization';
 import { KeyUsageService } from '../services/keyUsageService';
 
 export async function openKeyInLocaleFilesCommand(keyUsage: KeyUsageService, key?: string): Promise<void> {
-  const actualKey = key ?? await vscode.window.showInputBox({ title: 'Translation key to open' });
+  const actualKey = key ?? await vscode.window.showInputBox({ title: t('workbench.titles.openTranslationKey') });
   if (!actualKey) return;
   const files = keyUsage.findLocaleFilesForKey(actualKey);
   if (files.length === 0) {
-    vscode.window.showWarningMessage(`i18ntk: key "${actualKey}" was not found in locale files.`);
+    vscode.window.showWarningMessage(t('workbench.messages.keyNotFound', { key: actualKey }));
     return;
   }
   for (const file of files.slice(0, 8)) {

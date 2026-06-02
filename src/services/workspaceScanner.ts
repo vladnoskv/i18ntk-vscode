@@ -29,6 +29,8 @@ import { LocaleFileService } from './localeFileService';
 import { Logger } from './logger';
 
 const SOURCE_EXTENSIONS = new Set(['.js', '.jsx', '.ts', '.tsx', '.vue', '.svelte', '.html']);
+const MAX_SOURCE_USAGE_SCAN_BYTES = 2 * 1024 * 1024;
+const MAX_KNOWN_KEY_LITERAL_SCAN_BYTES = 512 * 1024;
 
 export class WorkspaceScanner {
   private readonly localeFiles = new LocaleFileService();
@@ -118,6 +120,10 @@ export class WorkspaceScanner {
       try {
         content = await fs.promises.readFile(filePath, 'utf8');
       } catch {
+        continue;
+      }
+      if (content.length > MAX_SOURCE_USAGE_SCAN_BYTES) {
+        this.logger.info(`Skipping large source file during usage scan: ${filePath}`);
         continue;
       }
       for (const match of findTranslationKeys(content, customWrappers)) {
@@ -382,6 +388,9 @@ function usageMatchesKey(usage: { key: string; dynamic?: boolean }, key: string)
 }
 
 function findKnownKeyLiteralUsages(text: string, filePath: string, keys: Set<string>): TranslationKeyUsage[] {
+  if (keys.size === 0 || text.length > MAX_KNOWN_KEY_LITERAL_SCAN_BYTES) return [];
+  if (!text.includes('"') && !text.includes("'") && !text.includes('`')) return [];
+
   const usages: TranslationKeyUsage[] = [];
   const pattern = /(['"`])((?:\\.|(?!\1)[\s\S])*?)\1/g;
   let match: RegExpExecArray | null;

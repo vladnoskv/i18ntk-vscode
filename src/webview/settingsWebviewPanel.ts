@@ -43,8 +43,12 @@ export class WorkbenchSettingsPanel {
     const model = {
       localeDirectory: configuredLocaleDirectory,
       sourceLocale: config.get('sourceLocale', 'en'),
+      extensionLanguage: config.get('extensionLanguage', 'auto'),
       keyStyle: config.get('keyStyle', 'dot'),
       autoScanOnSave: config.get('autoScanOnSave', false),
+      autoScanOnFileChange: config.get('autoScanOnFileChange', false),
+      scanOnStartup: config.get('scanOnStartup', false),
+      runCliValidationOnScan: config.get('runCliValidationOnScan', false),
       showInlineDiagnostics: config.get('showInlineDiagnostics', true),
       showHoverTranslations: config.get('showHoverTranslations', true),
       highlightLocaleKeys: config.get('highlightLocaleKeys', true),
@@ -54,7 +58,7 @@ export class WorkbenchSettingsPanel {
       },
       ignoredDiagnostics: config.get('ignoredDiagnostics', []) as string[],
       reportFormat: config.get('reportFormat', 'webview'),
-      maxScanFiles: config.get('maxScanFiles', 5000),
+      maxScanFiles: config.get('maxScanFiles', 2000),
       exclude: config.get('exclude', ['node_modules', '.next', 'dist', 'build', 'coverage']) as string[],
       customWrappers: config.get('customWrappers', []) as string[],
       autoTranslateProvider: config.get('autoTranslateProvider', 'google'),
@@ -129,12 +133,18 @@ export class WorkbenchSettingsPanel {
   <section class="grid">
     ${textField('localeDirectory', 'Locale Directory', model.localeDirectory, 'Leave empty to auto-detect common locale folders.')}
     ${textField('sourceLocale', 'Source Locale', model.sourceLocale, 'Source/default locale code, such as en.')}
+    ${selectField('extensionLanguage', 'Extension UI Language', model.extensionLanguage, ['auto', 'en', 'es', 'fr', 'de'], 'Use auto to follow VS Code when supported, or pick a fixed extension UI language.')}
     ${selectField('keyStyle', 'Key Style', model.keyStyle, ['dot', 'snake', 'camel', 'kebab', 'flat'], 'Used for invalid key name diagnostics.')}
     ${selectField('reportFormat', 'Report Format', model.reportFormat, ['webview', 'markdown'], 'Default report presentation for Workbench reports.')}
     ${numberField('maxScanFiles', 'Max Scan Files', model.maxScanFiles, 'Caps source scanning work for large repositories.')}
   </section>
+  <h2>Scan Scheduling</h2>
+  <label><input type="checkbox" id="scanOnStartup" ${model.scanOnStartup ? 'checked' : ''}>Run a scan when Workbench starts</label>
+  <label><input type="checkbox" id="autoScanOnSave" ${model.autoScanOnSave ? 'checked' : ''}>Auto-scan after editor saves</label>
+  <label><input type="checkbox" id="autoScanOnFileChange" ${model.autoScanOnFileChange ? 'checked' : ''}>Auto-scan when locale or i18ntk config files change on disk</label>
+  <label><input type="checkbox" id="runCliValidationOnScan" ${model.runCliValidationOnScan ? 'checked' : ''}>Also run CLI validation during scans</label>
+  <div class="hint">Automatic scans are off by default to keep extension-host CPU and memory low. Use Save and Scan or the Scan Workspace command for manual scans.</div>
   <h2>Editor Feedback</h2>
-  <label><input type="checkbox" id="autoScanOnSave" ${model.autoScanOnSave ? 'checked' : ''}>Auto-scan on save</label>
   <label><input type="checkbox" id="showInlineDiagnostics" ${model.showInlineDiagnostics ? 'checked' : ''}>Show inline diagnostics</label>
   <label><input type="checkbox" id="showHoverTranslations" ${model.showHoverTranslations ? 'checked' : ''}>Show hover translations</label>
   <label><input type="checkbox" id="highlightLocaleKeys" ${model.highlightLocaleKeys ? 'checked' : ''}>Color-code locale JSON keys</label>
@@ -190,10 +200,14 @@ export class WorkbenchSettingsPanel {
       return {
         localeDirectory: document.getElementById('localeDirectory').value.trim(),
         sourceLocale: document.getElementById('sourceLocale').value.trim() || 'en',
+        extensionLanguage: document.getElementById('extensionLanguage').value,
         keyStyle: document.getElementById('keyStyle').value,
         reportFormat: document.getElementById('reportFormat').value,
-        maxScanFiles: parseInt(document.getElementById('maxScanFiles').value, 10) || 5000,
+        maxScanFiles: parseInt(document.getElementById('maxScanFiles').value, 10) || 2000,
+        scanOnStartup: document.getElementById('scanOnStartup').checked,
         autoScanOnSave: document.getElementById('autoScanOnSave').checked,
+        autoScanOnFileChange: document.getElementById('autoScanOnFileChange').checked,
+        runCliValidationOnScan: document.getElementById('runCliValidationOnScan').checked,
         showInlineDiagnostics: document.getElementById('showInlineDiagnostics').checked,
         showHoverTranslations: document.getElementById('showHoverTranslations').checked,
         highlightLocaleKeys: document.getElementById('highlightLocaleKeys').checked,
@@ -270,10 +284,14 @@ export class WorkbenchSettingsPanel {
 const SETTINGS_KEYS = [
   'localeDirectory',
   'sourceLocale',
+  'extensionLanguage',
   'keyStyle',
   'reportFormat',
   'maxScanFiles',
+  'scanOnStartup',
   'autoScanOnSave',
+  'autoScanOnFileChange',
+  'runCliValidationOnScan',
   'showInlineDiagnostics',
   'showHoverTranslations',
   'highlightLocaleKeys',

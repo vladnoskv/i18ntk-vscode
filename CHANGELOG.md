@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.1.3 - 2026-06-02
+
+- Fixed overlapping Workbench scans by reusing the in-flight scan instead of opening multiple concurrent progress notifications.
+- Kept Workbench manual-by-default: startup scans, save scans, locale/config file-change scans, and extra CLI validation are all disabled unless explicitly enabled.
+- Added `i18ntk.scanOnStartup`, `i18ntk.autoScanOnFileChange`, and `i18ntk.runCliValidationOnScan` settings.
+- Expanded the Workbench settings webview with a Scan Scheduling section that explains the CPU and memory tradeoffs for automatic scans.
+- Stopped locale and i18ntk config file watchers from triggering scans when automatic file-change scans are disabled.
+- Reduced default scan breadth from 5000 to 2000 source files and skipped source files larger than 2 MB during usage scanning.
+- Avoided launching the background `i18ntk-validate` child process during normal scans unless `i18ntk.runCliValidationOnScan` is enabled.
+
+## 1.1.2 - 2026-06-02
+
+- Added i18ntk-powered extension UI localization with English, Spanish, French, and German locale bundles under `src/i18ntk/locales`.
+- Added the `i18ntk.extensionLanguage` setting so users can follow VS Code display language or choose an extension UI language explicitly.
+- Localized Workbench commands, notifications, settings UI copy, and extension webview labels through the i18ntk runtime wrapper.
+- Added locale copy scripts so packaged builds include i18ntk locale assets.
+- Added tests that verify language switching, interpolation, fallback behavior, locale key coverage, and placeholder parity for every extension UI locale.
+- Fixed a VS Code extension-host CPU hotspot from the unresponsive profile by skipping broad known-key literal fallback scanning in very large source files while preserving explicit translation-call detection.
+- Bumped the packaged i18ntk dependency reference to `i18ntk-4.4.2.tgz`.
+
 ## 1.1.1 - 2026-06-02
 
 - Removed generic function-call key extraction so ordinary app calls such as `get("next")`, `headers.get("etag")`, and `clearWaitlist("admin.panel")` are not reported as missing translation keys.

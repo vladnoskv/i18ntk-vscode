@@ -10,6 +10,7 @@ declare const console: {
   warn(...args: unknown[]): void;
   error(...args: unknown[]): void;
 };
+declare function require(id: string): any;
 declare function setTimeout(handler: (...args: unknown[]) => void, timeout?: number): unknown;
 declare function clearTimeout(timeoutId: unknown): void;
 

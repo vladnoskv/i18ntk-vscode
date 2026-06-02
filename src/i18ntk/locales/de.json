@@ -1,0 +1,38 @@
+{
+  "workbench": {
+    "messages": {
+      "workspaceRequired": "i18ntk Workbench benötigt einen geöffneten Arbeitsbereich.",
+      "scanComplete": "i18ntk-Scan abgeschlossen: {locales} Sprachen, {missing} fehlende Schlüssel, {placeholders} Platzhalterprobleme, {unused} ungenutzte Schlüssel.",
+      "scanFailed": "i18ntk-Scan fehlgeschlagen: {message}",
+      "diagnosticsCleared": "i18ntk-Diagnosen gelöscht. Führe Arbeitsbereich scannen aus, um zu aktualisieren.",
+      "localesClean": "i18ntk: Sprachen sind sauber - keine fehlenden Schlüssel, Platzhalterabweichungen oder riskanten Inhalte.",
+      "validationIssues": "i18ntk: {count} Probleme gefunden. Details stehen im Ausgabekanal.",
+      "usageSummary": "i18ntk-Nutzung: {missing} fehlend, {unused} ungenutzt. Zustand: {health}%",
+      "keyNotFound": "i18ntk: Schlüssel \"{key}\" wurde in den Sprachdateien nicht gefunden.",
+      "autoTranslateProtectionAdded": "\"{key}\" wurde den geschützten Schlüsseln von i18ntk Auto Translate hinzugefügt.",
+      "missingKeyAdded": "\"{key}\" wurde zu {count} Sprachdatei(en) hinzugefügt.",
+      "reportCopied": "Berichts-Markdown in die Zwischenablage kopiert.",
+      "issueCopied": "Problem in die Zwischenablage kopiert.",
+      "reportSaveWorkspaceRequired": "Kein Arbeitsbereich geöffnet, um den Bericht zu speichern.",
+      "reportSaved": "Bericht gespeichert unter {path}",
+      "localeDirectorySet": "i18ntk-Sprachverzeichnis auf {path} gesetzt.",
+      "localeDirectoryDetected": "i18ntk-Sprachverzeichnis erkannt: {path}.",
+      "reportNeedsScan": "Führe i18ntk: Arbeitsbereich scannen aus, bevor du den Bericht öffnest."
+    },
+    "titles": {
+      "openTranslationKey": "Zu öffnender Übersetzungsschlüssel",
+      "scanProgress": "Arbeitsbereich wird mit i18ntk Workbench gescannt",
+      "selectLocaleDirectory": "Sprachverzeichnis auswählen",
+      "autoTranslateTargets": "Zielsprachen für Auto Translate",
+      "autoTranslatePreview": "Vorschau von i18ntk Auto Translate",
+      "autoTranslateRun": "i18ntk Auto Translate wird ausgeführt"
+    },
+    "actions": {
+      "addMissingKey": "Fehlenden Übersetzungsschlüssel hinzufügen",
+      "addAutoTranslateProtection": "Schlüssel zum Platzhalterschutz von Auto Translate hinzufügen",
+      "openTranslationKey": "Übersetzungsschlüssel in Sprachdateien öffnen",
+      "ignoreDiagnostic": "Diese i18ntk-Diagnose ignorieren",
+      "openFile": "Datei öffnen"
+    }
+  }
+}

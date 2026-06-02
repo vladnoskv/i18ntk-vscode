@@ -1,0 +1,38 @@
+{
+  "workbench": {
+    "messages": {
+      "workspaceRequired": "i18ntk Workbench requiere un espacio de trabajo abierto.",
+      "scanComplete": "Analisis de i18ntk completado: {locales} locales, {missing} claves faltantes, {placeholders} problemas de marcadores, {unused} claves sin uso.",
+      "scanFailed": "El analisis de i18ntk fallo: {message}",
+      "diagnosticsCleared": "Diagnosticos de i18ntk borrados. Ejecuta Analizar espacio de trabajo para actualizar.",
+      "localesClean": "i18ntk: los locales estan correctos - no hay claves faltantes, desajustes de marcadores ni contenido riesgoso.",
+      "validationIssues": "i18ntk: se encontraron {count} problemas. Consulta el canal de salida para ver detalles.",
+      "usageSummary": "Uso de i18ntk: {missing} faltantes, {unused} sin uso. Salud: {health}%",
+      "keyNotFound": "i18ntk: la clave \"{key}\" no se encontro en los archivos de locales.",
+      "autoTranslateProtectionAdded": "Se agrego \"{key}\" a las claves protegidas de i18ntk Auto Translate.",
+      "missingKeyAdded": "Se agrego \"{key}\" a {count} archivo(s) de locales.",
+      "reportCopied": "Markdown del informe copiado al portapapeles.",
+      "issueCopied": "Incidencia copiada al portapapeles.",
+      "reportSaveWorkspaceRequired": "No hay un espacio de trabajo abierto para guardar el informe.",
+      "reportSaved": "Informe guardado en {path}",
+      "localeDirectorySet": "Directorio de locales de i18ntk establecido en {path}.",
+      "localeDirectoryDetected": "Directorio de locales de i18ntk detectado: {path}.",
+      "reportNeedsScan": "Ejecuta i18ntk: Analizar espacio de trabajo antes de abrir el informe."
+    },
+    "titles": {
+      "openTranslationKey": "Clave de traduccion para abrir",
+      "scanProgress": "Analizando el espacio de trabajo con i18ntk Workbench",
+      "selectLocaleDirectory": "Seleccionar directorio de locales",
+      "autoTranslateTargets": "Locales de destino para Auto Translate",
+      "autoTranslatePreview": "Previsualizando i18ntk Auto Translate",
+      "autoTranslateRun": "Ejecutando i18ntk Auto Translate"
+    },
+    "actions": {
+      "addMissingKey": "Agregar clave de traduccion faltante",
+      "addAutoTranslateProtection": "Agregar clave a la proteccion de marcadores de Auto Translate",
+      "openTranslationKey": "Abrir clave de traduccion en archivos de locales",
+      "ignoreDiagnostic": "Ignorar este diagnostico de i18ntk",
+      "openFile": "Abrir archivo"
+    }
+  }
+}

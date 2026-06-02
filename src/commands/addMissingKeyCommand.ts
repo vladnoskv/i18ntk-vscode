@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { resolveI18ntkConfig } from '../config/i18ntkConfigResolver';
+import { t } from '../i18ntk/localization';
 import { LocaleFileService } from '../services/localeFileService';
 import { ScanState } from './scanWorkspaceCommand';
 
@@ -10,7 +11,7 @@ export function registerAddMissingKeyCommand(context: any, state: ScanState): vo
     if (!resolvedKey) return;
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
-      vscode.window.showWarningMessage('i18ntk Workbench requires an open workspace.');
+      vscode.window.showWarningMessage(t('workbench.messages.workspaceRequired'));
       return;
     }
     const sourceText = await vscode.window.showInputBox({
@@ -24,7 +25,7 @@ export function registerAddMissingKeyCommand(context: any, state: ScanState): vo
       const value = locale === config.sourceLocale ? (sourceText || `TODO: ${resolvedKey}`) : `TODO: ${resolvedKey}`;
       changed.push(await service.addKey(config, locale, resolvedKey, value));
     }
-    vscode.window.showInformationMessage(`Added "${resolvedKey}" to ${changed.length} locale file(s).`);
+    vscode.window.showInformationMessage(t('workbench.messages.missingKeyAdded', { key: resolvedKey, count: changed.length }));
     state.report = undefined;
     await vscode.commands.executeCommand('i18ntk.scanWorkspace');
   }));

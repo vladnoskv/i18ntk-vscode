@@ -1,10 +1,12 @@
 import * as vscode from 'vscode';
 import { resolveI18ntkConfig } from '../config/i18ntkConfigResolver';
+import { t } from '../i18ntk/localization';
 import { I18ntkAdapter } from '../services/i18ntkAdapter';
 import { Logger } from '../services/logger';
+import { runSingleFlightScan, SingleFlightState } from '../services/scanCoordinator';
 import { I18nReport, I18nScanResult } from '../types';
 
-export interface ScanState {
+export interface ScanState extends SingleFlightState {
   result?: I18nScanResult;
   report?: I18nReport;
   onClearDiagnostics?: () => void;
@@ -17,15 +19,26 @@ export async function scanWorkspaceCommand(
   state: ScanState,
   onUpdate: (result: I18nScanResult, report: I18nReport) => void
 ): Promise<void> {
+  return runSingleFlightScan(state, () => scanWorkspaceCommandInternal(adapter, logger, state, onUpdate), () => {
+    logger.info('Workspace scan already running; reusing the in-flight scan.');
+  });
+}
+
+async function scanWorkspaceCommandInternal(
+  adapter: I18ntkAdapter,
+  logger: Logger,
+  state: ScanState,
+  onUpdate: (result: I18nScanResult, report: I18nReport) => void
+): Promise<void> {
   const folder = vscode.workspace.workspaceFolders?.[0];
   if (!folder) {
-    vscode.window.showWarningMessage('i18ntk Workbench requires an open workspace.');
+    vscode.window.showWarningMessage(t('workbench.messages.workspaceRequired'));
     return;
   }
 
   await vscode.window.withProgress({
     location: vscode.ProgressLocation.Notification,
-    title: 'Scanning workspace with i18ntk Workbench',
+    title: t('workbench.titles.scanProgress'),
     cancellable: true
   }, async (progress: vscode.Progress<{ message?: string }>, token: vscode.CancellationToken) => {
     try {
@@ -67,12 +80,17 @@ export async function scanWorkspaceCommand(
         8000
       );
       vscode.window.showInformationMessage(
-        `i18ntk scan complete: ${result.locales.length} locales, ${result.missingKeys.length} missing keys, ${result.placeholderMismatches.length} placeholder issues, ${result.unusedKeys.length} unused keys.`
+        t('workbench.messages.scanComplete', {
+          locales: result.locales.length,
+          missing: result.missingKeys.length,
+          placeholders: result.placeholderMismatches.length,
+          unused: result.unusedKeys.length
+        })
       );
     } catch (error) {
       if (error instanceof vscode.CancellationError) return;
       logger.error('Scan failed', error);
-      vscode.window.showErrorMessage(`i18ntk scan failed: ${error instanceof Error ? error.message : String(error)}`);
+      vscode.window.showErrorMessage(t('workbench.messages.scanFailed', { message: error instanceof Error ? error.message : String(error) }));
     }
   });
 }

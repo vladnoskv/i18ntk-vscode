@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { t } from '../i18ntk/localization';
 
 export function registerAddAutoTranslatePlaceholderCommand(context: vscode.ExtensionContext): void {
   context.subscriptions.push(vscode.commands.registerCommand('i18ntk.addAutoTranslatePlaceholder', async (key?: string) => {
@@ -8,7 +9,7 @@ export function registerAddAutoTranslatePlaceholderCommand(context: vscode.Exten
     if (!resolvedKey) return;
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
-      vscode.window.showWarningMessage('i18ntk Workbench requires an open workspace.');
+      vscode.window.showWarningMessage(t('workbench.messages.workspaceRequired'));
       return;
     }
 
@@ -23,7 +24,7 @@ export function registerAddAutoTranslatePlaceholderCommand(context: vscode.Exten
     config.patterns = Array.isArray(config.patterns) ? config.patterns : [];
 
     await fs.writeFile(filePath, JSON.stringify(config, null, 2) + '\n', 'utf8');
-    vscode.window.showInformationMessage(`Added "${resolvedKey}" to i18ntk Auto Translate protection keys.`);
+    vscode.window.showInformationMessage(t('workbench.messages.autoTranslateProtectionAdded', { key: resolvedKey }));
     await vscode.commands.executeCommand('i18ntk.scanWorkspace');
   }));
 }

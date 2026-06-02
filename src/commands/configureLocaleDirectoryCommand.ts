@@ -1,6 +1,7 @@
 import path from 'node:path';
 import * as vscode from 'vscode';
 import { detectLocaleDirectory, normalizeRelativePath } from '../config/localeDiscovery';
+import { t } from '../i18ntk/localization';
 import { Logger } from '../services/logger';
 
 interface ConfigureLocaleDirectoryOptions {
@@ -22,12 +23,12 @@ export function registerConfigureLocaleDirectoryCommands(context: vscode.Extensi
 export async function chooseLocaleDirectory(options: ConfigureLocaleDirectoryOptions = {}): Promise<boolean> {
   const folder = vscode.workspace.workspaceFolders?.[0];
   if (!folder) {
-    vscode.window.showWarningMessage('i18ntk Workbench requires an open workspace.');
+    vscode.window.showWarningMessage(t('workbench.messages.workspaceRequired'));
     return false;
   }
 
   const selected = await vscode.window.showOpenDialog({
-    title: 'Select locale directory',
+    title: t('workbench.titles.selectLocaleDirectory'),
     defaultUri: vscode.Uri.file(folder.uri.fsPath),
     canSelectFiles: false,
     canSelectFolders: true,
@@ -39,7 +40,7 @@ export async function chooseLocaleDirectory(options: ConfigureLocaleDirectoryOpt
 
   await saveLocaleDirectory(folder.uri.fsPath, localeDirectory);
   if (!options.silent) {
-    vscode.window.showInformationMessage(`i18ntk locale directory set to ${relativeWorkspacePath(folder.uri.fsPath, localeDirectory)}.`);
+    vscode.window.showInformationMessage(t('workbench.messages.localeDirectorySet', { path: relativeWorkspacePath(folder.uri.fsPath, localeDirectory) }));
   }
   if (options.rescan) await vscode.commands.executeCommand('i18ntk.scanWorkspace');
   return true;
@@ -48,7 +49,7 @@ export async function chooseLocaleDirectory(options: ConfigureLocaleDirectoryOpt
 export async function detectAndSaveLocaleDirectory(logger: Logger, options: ConfigureLocaleDirectoryOptions = {}): Promise<boolean> {
   const folder = vscode.workspace.workspaceFolders?.[0];
   if (!folder) {
-    vscode.window.showWarningMessage('i18ntk Workbench requires an open workspace.');
+    vscode.window.showWarningMessage(t('workbench.messages.workspaceRequired'));
     return false;
   }
 
@@ -69,7 +70,7 @@ export async function detectAndSaveLocaleDirectory(logger: Logger, options: Conf
   await saveLocaleDirectory(folder.uri.fsPath, detected.localeDirectory);
   logger.info(`Auto-detected locale directory: ${detected.relativeLocaleDirectory}`);
   if (!options.silent) {
-    vscode.window.showInformationMessage(`i18ntk locale directory detected: ${detected.relativeLocaleDirectory}.`);
+    vscode.window.showInformationMessage(t('workbench.messages.localeDirectoryDetected', { path: detected.relativeLocaleDirectory }));
   }
   if (options.rescan) await vscode.commands.executeCommand('i18ntk.scanWorkspace');
   return true;

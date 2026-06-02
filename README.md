@@ -12,6 +12,21 @@ i18ntk Workbench gives i18n projects a focused VS Code control center: scan loca
 
 It is the full VS Code companion to the zero-dependency `i18ntk` npm package. Workbench owns the i18ntk Activity Bar sidebar; when i18ntk Lens is installed too, Lens stays inline-only with hovers, CodeLens, diagnostics, commands, and settings.
 
+## Latest in 1.1.3
+
+- Workbench scans are single-flight now, so repeated scan requests reuse the active scan instead of stacking multiple progress notifications.
+- Automatic scans are disabled by default. Enable startup, save, or locale/config file-change scans from the new Scan Scheduling settings only when you want them.
+- Extra CLI validation during scans is now opt-in with `i18ntk.runCliValidationOnScan`; normal Workbench scans use the local scanner to reduce CPU and memory use.
+- Default scan breadth is lower, and very large source files are skipped during usage scanning to keep the VS Code extension host responsive.
+
+## Latest in 1.1.2
+
+- Workbench extension UI messages are now powered by i18ntk locale bundles in English, Spanish, French, and German.
+- New `i18ntk.extensionLanguage` setting lets users follow VS Code display language or explicitly choose the Workbench UI language.
+- Packaged builds copy `src/i18ntk/locales` into the extension output so the localization runtime works inside VS Code.
+- Locale coverage tests verify every translated Workbench UI bundle has the same keys and placeholders as English.
+- Large source files no longer trigger the broad known-key literal fallback scan that caused the reported unresponsive CPU profile; explicit `t("key")` usage detection still runs.
+
 ## Latest in 1.1.1
 
 - Source scans no longer treat arbitrary function calls or methods like `get("next")`, `headers.get("etag")`, or `clearWaitlist("admin.panel")` as translation keys.

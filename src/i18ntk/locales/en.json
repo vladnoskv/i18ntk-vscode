@@ -1,0 +1,38 @@
+{
+  "workbench": {
+    "messages": {
+      "workspaceRequired": "i18ntk Workbench requires an open workspace.",
+      "scanComplete": "i18ntk scan complete: {locales} locales, {missing} missing keys, {placeholders} placeholder issues, {unused} unused keys.",
+      "scanFailed": "i18ntk scan failed: {message}",
+      "diagnosticsCleared": "i18ntk diagnostics cleared. Run Scan Workspace to refresh.",
+      "localesClean": "i18ntk: locales are clean - no missing keys, placeholder mismatches, or risky content.",
+      "validationIssues": "i18ntk: {count} issues found. See Output channel for details.",
+      "usageSummary": "i18ntk usage: {missing} missing, {unused} unused. Health: {health}%",
+      "keyNotFound": "i18ntk: key \"{key}\" was not found in locale files.",
+      "autoTranslateProtectionAdded": "Added \"{key}\" to i18ntk Auto Translate protection keys.",
+      "missingKeyAdded": "Added \"{key}\" to {count} locale file(s).",
+      "reportCopied": "Report markdown copied to clipboard.",
+      "issueCopied": "Issue copied to clipboard.",
+      "reportSaveWorkspaceRequired": "No workspace open to save the report.",
+      "reportSaved": "Report saved to {path}",
+      "localeDirectorySet": "i18ntk locale directory set to {path}.",
+      "localeDirectoryDetected": "i18ntk locale directory detected: {path}.",
+      "reportNeedsScan": "Run i18ntk: Scan Workspace before opening the report."
+    },
+    "titles": {
+      "openTranslationKey": "Translation key to open",
+      "scanProgress": "Scanning workspace with i18ntk Workbench",
+      "selectLocaleDirectory": "Select locale directory",
+      "autoTranslateTargets": "Auto Translate target locales",
+      "autoTranslatePreview": "Previewing i18ntk Auto Translate",
+      "autoTranslateRun": "Running i18ntk Auto Translate"
+    },
+    "actions": {
+      "addMissingKey": "Add missing translation key",
+      "addAutoTranslateProtection": "Add key to Auto Translate placeholder protection",
+      "openTranslationKey": "Open translation key in locale files",
+      "ignoreDiagnostic": "Ignore this i18ntk diagnostic",
+      "openFile": "Open File"
+    }
+  }
+}

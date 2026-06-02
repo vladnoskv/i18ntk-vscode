@@ -112,6 +112,42 @@ test('WorkspaceScanner treats exact known translation string literals as used ke
   assert.deepEqual(result.unusedKeys.map((item) => item.key), ['duel.unused']);
 });
 
+test('WorkspaceScanner skips broad known-key literal scanning in very large source files', async () => {
+  const rootPath = await fs.mkdtemp(path.join(os.tmpdir(), 'i18ntk-workbench-'));
+  await fs.mkdir(path.join(rootPath, 'locales'), { recursive: true });
+  await fs.mkdir(path.join(rootPath, 'src'), { recursive: true });
+  await fs.writeFile(path.join(rootPath, 'locales', 'en.json'), JSON.stringify({
+    common: { save: 'Save' },
+    huge: { literal: { only: 'Literal only' } }
+  }));
+  await fs.writeFile(path.join(rootPath, 'src', 'large.ts'), [
+    'const save = t("common.save");',
+    'const literalOnly = "huge.literal.only";',
+    'const filler = "' + 'x'.repeat(600 * 1024) + '";'
+  ].join('\n'));
+
+  const scanner = new WorkspaceScanner(new ConsoleLogger());
+  const result = await scanner.scan(rootPath, {
+    rootPath,
+    localeDirectory: path.join(rootPath, 'locales'),
+    sourceLocale: 'en',
+    keyStyle: 'dot',
+    autoScanOnSave: false,
+    showInlineDiagnostics: true,
+    showHoverTranslations: true,
+    reportFormat: 'webview',
+    maxScanFiles: 5000,
+    exclude: ['node_modules', '.git', 'dist', 'build', 'coverage'],
+    customWrappers: [],
+    autoTranslateProvider: 'google',
+    autoTranslateTargets: [],
+    autoTranslateMode: 'onlyMissing'
+  });
+
+  assert.equal(result.unusedKeys.some((item) => item.key === 'common.save'), false);
+  assert.equal(result.unusedKeys.some((item) => item.key === 'huge.literal.only'), true);
+});
+
 test('WorkspaceScanner uses resolved runtime candidates for missing and unused checks', async () => {
   const rootPath = await fs.mkdtemp(path.join(os.tmpdir(), 'i18ntk-workbench-'));
   await fs.mkdir(path.join(rootPath, 'locales'), { recursive: true });

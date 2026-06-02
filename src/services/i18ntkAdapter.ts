@@ -17,11 +17,14 @@ export class LocalI18ntkAdapter implements I18ntkAdapter {
 
   constructor(
     private readonly scanner: WorkspaceScanner,
-    private readonly logger: Logger
+    private readonly logger: Logger,
+    private readonly runCliValidation: (rootPath: string, config: ResolvedI18ntkConfig) => void = (rootPath, config) => this.tryRunI18ntkValidate(rootPath, config)
   ) {}
 
   async scanWorkspace(rootPath: string, config: ResolvedI18ntkConfig, token?: CancellationToken): Promise<I18nScanResult> {
-    this.tryRunI18ntkValidate(rootPath, config);
+    if (config.runCliValidationOnScan) {
+      this.runCliValidation(rootPath, config);
+    }
     return this.scanner.scan(rootPath, config, token);
   }
 

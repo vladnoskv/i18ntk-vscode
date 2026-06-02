@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+﻿import * as vscode from 'vscode';
 import { MissingKeyCodeActionProvider } from './codeActions/missingKeyCodeActionProvider';
 import { registerAddAutoTranslatePlaceholderCommand } from './commands/addAutoTranslatePlaceholderCommand';
 import { registerAddMissingKeyCommand } from './commands/addMissingKeyCommand';
@@ -11,6 +11,7 @@ import { registerScanWorkspaceCommand, ScanState } from './commands/scanWorkspac
 import { LocaleKeyDecorationProvider } from './decorations/localeKeyDecorationProvider';
 import { DiagnosticsProvider } from './diagnostics/diagnosticsProvider';
 import { TranslationHoverProvider } from './hover/translationHoverProvider';
+import { setExtensionLanguage, t } from './i18ntk/localization';
 import { LocalI18ntkAdapter } from './services/i18ntkAdapter';
 import { OutputChannelLogger } from './services/logger';
 import { KeyUsageService } from './services/keyUsageService';
@@ -21,6 +22,7 @@ import { WorkbenchSettingsPanel } from './webview/settingsWebviewPanel';
 import { DiagnosticRuleSeverity } from './types';
 
 export function activate(context: vscode.ExtensionContext): void {
+  setExtensionLanguage(vscode.workspace.getConfiguration('i18ntk').get('extensionLanguage', 'auto'));
   const outputChannel = vscode.window.createOutputChannel('i18ntk Workbench');
   const logger = new OutputChannelLogger(outputChannel);
   const scanner = new WorkspaceScanner(logger);
@@ -90,7 +92,7 @@ export function activate(context: vscode.ExtensionContext): void {
   // Clear all i18ntk diagnostics
   context.subscriptions.push(vscode.commands.registerCommand('i18ntk.clearDiagnostics', () => {
     diagnostics.update(undefined);
-    vscode.window.showInformationMessage('i18ntk diagnostics cleared. Run Scan Workspace to refresh.');
+    vscode.window.showInformationMessage(t('workbench.messages.diagnosticsCleared'));
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('i18ntk.validateLocales', async () => {
@@ -98,7 +100,7 @@ export function activate(context: vscode.ExtensionContext): void {
     if (!state.result) return;
     const issues: Array<{ key: string; locale?: string; message?: string }> = [...state.result.missingKeys.map((m: any) => ({ ...m, message: 'missing' })), ...state.result.placeholderMismatches.map((p: any) => ({ ...p, message: `missing ${p.missing?.join(',')}` })), ...state.result.riskyContent];
     if (issues.length === 0) {
-      vscode.window.showInformationMessage('i18ntk: locales are clean — no missing keys, placeholder mismatches, or risky content.');
+      vscode.window.showInformationMessage(t('workbench.messages.localesClean'));
     } else {
       outputChannel.appendLine(`\n=== i18ntk Validation Results ===`);
       for (const issue of issues) {
@@ -106,7 +108,7 @@ export function activate(context: vscode.ExtensionContext): void {
       }
       outputChannel.appendLine(`Total issues: ${issues.length}`);
       outputChannel.show();
-      vscode.window.showWarningMessage(`i18ntk: ${issues.length} issues found. See Output channel for details.`);
+      vscode.window.showWarningMessage(t('workbench.messages.validationIssues', { count: issues.length }));
     }
   }));
 
@@ -123,7 +125,11 @@ export function activate(context: vscode.ExtensionContext): void {
     outputChannel.appendLine(`Expansion risks: ${state.result.expansionRisks.length}`);
     outputChannel.appendLine(`Health score: ${state.result.healthScore}%`);
     outputChannel.show();
-    vscode.window.showInformationMessage(`i18ntk usage: ${state.result.missingKeys.length} missing, ${state.result.unusedKeys.length} unused. Health: ${state.result.healthScore}%`);
+    vscode.window.showInformationMessage(t('workbench.messages.usageSummary', {
+      missing: state.result.missingKeys.length,
+      unused: state.result.unusedKeys.length,
+      health: state.result.healthScore
+    }));
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('i18ntk.showSummary', async () => {
@@ -172,6 +178,10 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(vscode.languages.registerHoverProvider(documentSelector, new TranslationHoverProvider(() => state.result)));
   }
 
+  if (vscode.workspace.getConfiguration('i18ntk').get('scanOnStartup', false)) {
+    vscode.commands.executeCommand('i18ntk.scanWorkspace');
+  }
+
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(() => {
     if (!vscode.workspace.getConfiguration('i18ntk').get('autoScanOnSave', false)) return;
@@ -182,6 +192,9 @@ export function activate(context: vscode.ExtensionContext): void {
   }));
 
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
+    if (event.affectsConfiguration('i18ntk.extensionLanguage')) {
+      setExtensionLanguage(vscode.workspace.getConfiguration('i18ntk').get('extensionLanguage', 'auto'));
+    }
     if (event.affectsConfiguration('i18ntk.diagnosticSeverities') || event.affectsConfiguration('i18ntk.ignoredDiagnostics')) {
       if (!hasLensExtension) diagnostics.refresh();
     }
@@ -189,34 +202,36 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const fileWatcher = vscode.workspace.createFileSystemWatcher('**/locales/**/*.json');
   let watcherTimer: ReturnType<typeof setTimeout> | undefined;
-  fileWatcher.onDidChange(() => {
+  const scheduleFileChangeScan = (delay: number, markReportStale: boolean): void => {
+    if (!vscode.workspace.getConfiguration('i18ntk').get('autoScanOnFileChange', false)) return;
     if (watcherTimer) clearTimeout(watcherTimer);
     watcherTimer = setTimeout(() => {
-      logger.info('Locale file changed; marking report stale.');
-      state.report = undefined;
+      if (markReportStale) {
+        logger.info('Locale file changed; marking report stale.');
+        state.report = undefined;
+      }
       vscode.commands.executeCommand('i18ntk.scanWorkspace');
-    }, 2000);
+    }, delay);
+  };
+  fileWatcher.onDidChange(() => {
+    scheduleFileChangeScan(2000, true);
   });
   fileWatcher.onDidCreate(() => {
-    if (watcherTimer) clearTimeout(watcherTimer);
-    watcherTimer = setTimeout(() => {
-      vscode.commands.executeCommand('i18ntk.scanWorkspace');
-    }, 1000);
+    scheduleFileChangeScan(1000, false);
   });
   fileWatcher.onDidDelete(() => {
-    if (watcherTimer) clearTimeout(watcherTimer);
-    watcherTimer = setTimeout(() => {
-      vscode.commands.executeCommand('i18ntk.scanWorkspace');
-    }, 1000);
+    scheduleFileChangeScan(1000, false);
   });
   context.subscriptions.push(fileWatcher);
 
   const configWatcher = vscode.workspace.createFileSystemWatcher('**/i18ntk.config.{json,js}');
   configWatcher.onDidChange(() => {
+    if (!vscode.workspace.getConfiguration('i18ntk').get('autoScanOnFileChange', false)) return;
     logger.info('i18ntk config changed; re-resolving and re-scanning.');
     vscode.commands.executeCommand('i18ntk.scanWorkspace');
   });
   configWatcher.onDidCreate(() => {
+    if (!vscode.workspace.getConfiguration('i18ntk').get('autoScanOnFileChange', false)) return;
     vscode.commands.executeCommand('i18ntk.scanWorkspace');
   });
   context.subscriptions.push(configWatcher);

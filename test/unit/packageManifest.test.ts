@@ -14,6 +14,7 @@ const manifest = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package
     views?: Record<string, Array<{ id: string }>>;
   };
   scripts?: Record<string, string>;
+  dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
 };
 
@@ -40,13 +41,32 @@ test('manifest exposes diagnostic severity and ignore settings', () => {
   assert.deepEqual(properties?.['i18ntk.ignoredDiagnostics']?.default, []);
 });
 
-test('package scripts separate compile, unit tests, aggregate tests, verify, and package', () => {
-  assert.equal(manifest.scripts?.compile, 'tsc -p .');
-  assert.equal(manifest.scripts?.['test:compile'], 'tsc -p .');
+test('manifest exposes extension UI language setting', () => {
+  const properties = manifest.contributes?.configuration?.properties as Record<string, any>;
+  assert.equal(properties?.['i18ntk.extensionLanguage']?.default, 'auto');
+  assert.deepEqual(properties?.['i18ntk.extensionLanguage']?.enum, ['auto', 'en', 'es', 'fr', 'de']);
+});
+
+test('manifest keeps automatic scans and extra CLI validation disabled by default', () => {
+  const properties = manifest.contributes?.configuration?.properties as Record<string, any>;
+  assert.equal(properties?.['i18ntk.scanOnStartup']?.default, false);
+  assert.equal(properties?.['i18ntk.autoScanOnSave']?.default, false);
+  assert.equal(properties?.['i18ntk.autoScanOnFileChange']?.default, false);
+  assert.equal(properties?.['i18ntk.runCliValidationOnScan']?.default, false);
+});
+
+test('package scripts separate compile, locale asset copy, unit tests, aggregate tests, verify, and package', () => {
+  assert.equal(manifest.scripts?.compile, 'tsc -p . && node scripts/copy-i18ntk-locales.js');
+  assert.equal(manifest.scripts?.['test:compile'], 'tsc -p . && node scripts/copy-i18ntk-locales.js');
   assert.equal(manifest.scripts?.['test:unit'], 'node --test out/test/unit/*.test.js');
   assert.equal(manifest.scripts?.test, 'npm run test:compile && npm run test:unit');
   assert.equal(manifest.scripts?.verify, 'npm test && npm run package');
-  assert.equal(manifest.scripts?.package, 'vsce package');
+  assert.equal(manifest.scripts?.package, 'vsce package --out ../i18ntk-workbench-1.1.3.vsix');
+  assert.ok(manifest.dependencies?.i18ntk);
   assert.ok(manifest.devDependencies?.['@vscode/vsce']);
   assert.equal(manifest.devDependencies?.vsce, undefined);
+});
+
+test('manifest includes extension locale assets in the package', () => {
+  assert.equal(manifest.dependencies?.i18ntk, 'file:../i18ntk-4.4.2.tgz');
 });
