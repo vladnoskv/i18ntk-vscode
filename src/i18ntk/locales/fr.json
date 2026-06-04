@@ -17,7 +17,11 @@
       "reportSaved": "Rapport enregistre dans {path}",
       "localeDirectorySet": "Repertoire de langues i18ntk defini sur {path}.",
       "localeDirectoryDetected": "Repertoire de langues i18ntk detecte : {path}.",
-      "reportNeedsScan": "Lancez i18ntk : Analyser l'espace de travail avant d'ouvrir le rapport."
+      "reportNeedsScan": "Lancez i18ntk : Analyser l'espace de travail avant d'ouvrir le rapport.",
+      "noLocaleFiles": "Aucun fichier de langue trouve. Lancez d'abord Analyser l'espace de travail.",
+      "noScanData": "Aucune donnee d'analyse disponible. Lancez i18ntk : Analyser l'espace de travail d'abord.",
+      "diagnosticsRefreshed": "Diagnostics i18ntk actualises a partir des donnees d'analyse actuelles.",
+      "decorationsRebuilt": "Decorations i18ntk reconstruites a partir des donnees d'analyse actuelles."
     },
     "titles": {
       "openTranslationKey": "Cle de traduction a ouvrir",

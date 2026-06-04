@@ -12,6 +12,20 @@ i18ntk Workbench gives i18n projects a focused VS Code control center: scan loca
 
 It is the full VS Code companion to the zero-dependency `i18ntk` npm package. Workbench owns the i18ntk Activity Bar sidebar; when i18ntk Lens is installed too, Lens stays inline-only with hovers, CodeLens, diagnostics, commands, and settings.
 
+## Latest in 1.2.0
+
+- **Persistent Status Bar**: always-visible locale stats with color-coded health score (green ≥95%, yellow ≥75%, red <75%). Toggle via `i18ntk.showStatusBar`.
+- **Translation Key Autocompletion**: IntelliSense for keys when typing inside `t()`, `i18n.t()`, and other wrapper functions. Shows source value and all locale translations in documentation. Toggle via `i18ntk.enableKeyCompletion`.
+- **Explorer File Badges**: locale JSON files in the Explorer show coverage badges: green ✓ (100%), yellow count (≥80%), orange (partial), red ✗ (empty). Toggle via `i18ntk.enableFileBadges`.
+- **Translation Grid Editor**: spreadsheet-like view of locale files with side-by-side columns per language. Inline cell editing saves on blur. Regex search. "Save All" blurs all cells for batch-save. Open from the Locale Health tree or "Open With... → i18ntk Translation Grid" on locale JSON files.
+- **Semantic Token Highlighting**: translation keys visually distinguished from regular strings. Missing keys get deprecated modifier (strikethrough). JSON keys get function token type. Toggle via `i18ntk.enableSemanticTokens`.
+- **Document Links**: Ctrl+Click on `t('key')` in source → locale file definition. Ctrl+Click on `"key":` in JSON → source usage. Toggle via `i18ntk.enableDocumentLinks`.
+- **Getting Started Walkthrough**: guided 5-step onboarding for new users, accessible from Help → Get Started.
+- **New Commands**: `refreshDiagnostics` (re-apply diagnostics from cache), `rebuildAllDecorations` (rebuild all visual providers), `openTranslationGrid` (open grid editor).
+- **Dynamic Lens Detection**: `isLensActive()` checks Lens presence on every diagnostic operation. If Lens is uninstalled while Workbench runs, diagnostics auto-recover.
+- **Enhanced `clearDiagnostics`**: now also clears file decorations and resets status bar. Scan data preserved for re-population via `refreshDiagnostics`.
+- **5 new Settings**: `showStatusBar`, `enableKeyCompletion`, `enableFileBadges`, `enableSemanticTokens`, `enableDocumentLinks` — all configurable in the Workbench Settings webview under "New Feature Toggles".
+
 ## Latest in 1.1.3
 
 - Workbench scans are single-flight now, so repeated scan requests reuse the active scan instead of stacking multiple progress notifications.
@@ -77,11 +91,13 @@ Requirements:
 ## Quick Start
 
 1. Open a project with locale files, for example `locales/en/common.json` and `locales/fr/common.json`.
-2. Run `i18ntk: Scan Workspace` from the Command Palette.
-3. If no locale root is found, choose one with `i18ntk: Choose Locale Directory`.
-4. Open the i18ntk Workbench sidebar to review health, missing keys, placeholder issues, unused keys, setup state, and reports.
-5. Open `i18ntk: Open Summary Report` for validation, usage analysis, issue navigation, Markdown export, missing-key fixes, and Auto Translate.
-6. Open `i18ntk: Open Settings` to tune locale discovery, source locale, key style, diagnostics, wrappers, exclusions, and Auto Translate defaults.
+2. Open the Getting Started walkthrough from Help → Get Started (or skip ahead to step 2 below).
+3. Run `i18ntk: Scan Workspace` from the Command Palette.
+4. If no locale root is found, choose one with `i18ntk: Choose Locale Directory`.
+5. Open the i18ntk Workbench sidebar to review health, missing keys, placeholder issues, unused keys, setup state, and reports.
+6. Open `i18ntk: Open Summary Report` for validation, usage analysis, issue navigation, Markdown export, missing-key fixes, and Auto Translate.
+7. Open `i18ntk: Open Settings` to tune locale discovery, source locale, key style, diagnostics, wrappers, exclusions, and Auto Translate defaults.
+8. Use `i18ntk: Open Translation Grid` on any locale JSON file for a spreadsheet editor view.
 
 ## What You Get
 
@@ -90,6 +106,13 @@ Requirements:
 - **Diagnostics**: missing keys, placeholder mismatches, invalid key names, unused keys, risky content, expansion warnings, and Auto Translate residuals.
 - **Diagnostic controls**: configure each i18ntk Problem as error, warning, off, or ignore; right-click a Problem to ignore one diagnostic or turn off its rule.
 - **Locale JSON key highlighting**: optional color-coding for scanned locale keys by nesting depth.
+- **Explorer file badges**: coverage badges on locale JSON files (green ✓ complete, yellow partial, red empty).
+- **Semantic token highlighting**: translation keys visually distinct from regular strings; missing keys get strikethrough.
+- **Translation key autocompletion**: IntelliSense for keys inside `t()`, `i18n.t()`, and custom wrapper calls.
+- **Document links**: Ctrl+Click on `t('key')` → locale file; Ctrl+Click on JSON key → source usage.
+- **Translation Grid Editor**: spreadsheet-like view of locale files with side-by-side columns per language, inline editing, and regex search.
+- **Persistent status bar**: always-visible locale stats with color-coded health score.
+- **Getting Started walkthrough**: guided 5-step onboarding available from Help → Get Started.
 - **Hover translations**: shows locale values for `t("key")`, `i18n.t(...)`, `translate(...)`, `$t(...)`, and configured custom wrappers.
 - **Quick fixes**: add missing keys, open any i18ntk diagnostic key in locale files, or add Auto Translate residual keys to protection from the editor or Problems panel.
 - **Summary report**: validate, analyze usage, Auto Translate, filter issues, copy individual issues, open files, add keys, review Auto Translate residuals, copy Markdown, save reports, and open settings.
@@ -113,6 +136,10 @@ Requirements:
 | `i18ntk: Open Native Settings` | Opens VS Code settings filtered to i18ntk. | Settings if you edit them. |
 | `i18ntk: Choose Locale Directory` | Opens a folder picker and saves the selected locale root for this workspace. | Workspace setting. |
 | `i18ntk: Detect Locale Directory` | Searches common and nested project paths for JSON locale files and saves the detected root. | Workspace setting. |
+| `i18ntk: Open Translation Grid` | Opens a locale file in the Translation Grid spreadsheet editor. | Locale JSON files when cell edits save. |
+| `i18ntk: Refresh Diagnostics` | Re-applies diagnostics from cached scan data without re-scanning. Dynamically checks Lens presence and `showInlineDiagnostics`. | No file changes. |
+| `i18ntk: Rebuild All Decorations` | Rebuilds all visual providers (diagnostics, status bar, file badges, key colors, tree) from current scan data. | No file changes. |
+| `i18ntk: Clear Diagnostics` | Clears the diagnostic collection, file badges, and resets the status bar. Scan data preserved for re-population. | No file changes. |
 
 ## Settings
 
@@ -121,19 +148,28 @@ Requirements:
 | `i18ntk.localeDirectory` | string | `""` | Locale directory path relative to workspace root. Empty means auto-detect. |
 | `i18ntk.sourceLocale` | string | `"en"` | Source/default locale code. |
 | `i18ntk.keyStyle` | enum | `"dot"` | Expected key style: `dot`, `snake`, `camel`, `kebab`, or `flat`. |
+| `i18ntk.extensionLanguage` | enum | `"auto"` | Workbench UI language: `auto`, `en`, `es`, `fr`, or `de`. |
+| `i18ntk.scanOnStartup` | boolean | `false` | Run a scan when Workbench activates. |
 | `i18ntk.autoScanOnSave` | boolean | `false` | Run a debounced scan after file saves. |
+| `i18ntk.autoScanOnFileChange` | boolean | `false` | Run a debounced scan when locale or config files change on disk. |
+| `i18ntk.runCliValidationOnScan` | boolean | `false` | Also run CLI validation during Workbench scans. |
 | `i18ntk.showInlineDiagnostics` | boolean | `true` | Show locale diagnostics in editors. |
 | `i18ntk.showHoverTranslations` | boolean | `true` | Show locale values when hovering over translation keys. |
 | `i18ntk.highlightLocaleKeys` | boolean | `true` | Color-code keys in scanned locale JSON files by nesting depth. |
 | `i18ntk.diagnosticSeverities` | object | see below | Per-rule Problems behavior: `error`, `warning`, `off`, or `ignore`. |
 | `i18ntk.ignoredDiagnostics` | array | `[]` | Specific ignored diagnostics created by right-click quick fixes. |
 | `i18ntk.reportFormat` | enum | `"webview"` | Preferred report presentation: `webview` or `markdown`. |
-| `i18ntk.maxScanFiles` | number | `5000` | Maximum source files to scan. |
+| `i18ntk.maxScanFiles` | number | `2000` | Maximum source files to scan. |
 | `i18ntk.exclude` | array | `["node_modules", ".next", "dist", "build", "coverage"]` | Folders excluded from scans. |
 | `i18ntk.customWrappers` | array | `[]` | Additional translation wrapper names, such as `tx`, `__`, or `_t`. |
 | `i18ntk.autoTranslateProvider` | enum | `"google"` | CLI provider for Auto Translate: `google`, `deepl`, or `libretranslate`. |
 | `i18ntk.autoTranslateTargets` | array | `[]` | Default target locales. Empty means infer from the latest scan. |
 | `i18ntk.autoTranslateMode` | enum | `"onlyMissing"` | `onlyMissing`, `translateAll`, or `dryRun`. |
+| `i18ntk.showStatusBar` | boolean | `true` | Show persistent status bar with locale counts, missing keys, and health score. |
+| `i18ntk.enableKeyCompletion` | boolean | `true` | Enable translation key IntelliSense autocompletion in source files. |
+| `i18ntk.enableFileBadges` | boolean | `true` | Show translation coverage badges on locale JSON files in the Explorer. |
+| `i18ntk.enableSemanticTokens` | boolean | `true` | Apply semantic highlighting to translation keys. Missing keys get strikethrough. |
+| `i18ntk.enableDocumentLinks` | boolean | `true` | Enable Ctrl+Click navigation from `t('key')` to locale file definitions and back. |
 
 Default diagnostic rule settings:
 
@@ -146,7 +182,9 @@ Default diagnostic rule settings:
     "i18ntk.unusedKey": "warning",
     "i18ntk.riskyContent": "warning",
     "i18ntk.expansionRisk": "off",
-    "i18ntk.autoTranslateResidual": "warning"
+    "i18ntk.autoTranslateResidual": "warning",
+    "i18ntk.clientBoundary": "warning",
+    "i18ntk.copyFormatter": "warning"
   }
 }
 ```

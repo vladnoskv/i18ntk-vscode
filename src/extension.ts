@@ -1,4 +1,5 @@
 ﻿import * as vscode from 'vscode';
+import path from 'node:path';
 import { MissingKeyCodeActionProvider } from './codeActions/missingKeyCodeActionProvider';
 import { registerAddAutoTranslatePlaceholderCommand } from './commands/addAutoTranslatePlaceholderCommand';
 import { registerAddMissingKeyCommand } from './commands/addMissingKeyCommand';
@@ -8,14 +9,20 @@ import { registerOpenReportCommand } from './commands/openReportCommand';
 import { openKeyInLocaleFilesCommand } from './commands/openKeyInLocaleFilesCommand';
 import { registerRefreshTreeCommand } from './commands/refreshTreeCommand';
 import { registerScanWorkspaceCommand, ScanState } from './commands/scanWorkspaceCommand';
+import { TranslationKeyCompletionProvider } from './completions/translationKeyCompletionProvider';
+import { LocaleFileDecorationProvider } from './decorations/localeFileDecorationProvider';
 import { LocaleKeyDecorationProvider } from './decorations/localeKeyDecorationProvider';
 import { DiagnosticsProvider } from './diagnostics/diagnosticsProvider';
+import { TranslationGridEditorProvider } from './editors/translationGridEditorProvider';
 import { TranslationHoverProvider } from './hover/translationHoverProvider';
 import { setExtensionLanguage, t } from './i18ntk/localization';
+import { I18nDocumentLinkProvider } from './links/i18nDocumentLinkProvider';
+import { I18nSemanticTokensProvider } from './semantic/i18nSemanticTokensProvider';
 import { LocalI18ntkAdapter } from './services/i18ntkAdapter';
 import { OutputChannelLogger } from './services/logger';
 import { KeyUsageService } from './services/keyUsageService';
 import { WorkspaceScanner } from './services/workspaceScanner';
+import { I18nStatusBarItem } from './status/i18nStatusBarItem';
 import { LocaleHealthTreeProvider } from './tree/localeHealthTreeProvider';
 import { ReportWebviewPanel } from './webview/reportWebviewPanel';
 import { WorkbenchSettingsPanel } from './webview/settingsWebviewPanel';
@@ -40,14 +47,75 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.extensions.getExtension('vladnoskv.i18ntk-lens');
   const hasLensExtension = Boolean(lensExtension);
 
-  context.subscriptions.push(outputChannel, diagnostics, localeKeyDecorations);
+  const isLensActive = (): boolean => Boolean(
+    vscode.extensions.getExtension('VladNoskov.i18ntk-lens') ??
+    vscode.extensions.getExtension('vladnoskv.i18ntk-lens')
+  );
+
+  const statusBar = new I18nStatusBarItem();
+  statusBar.update(undefined);
+  const fileDecorations = new LocaleFileDecorationProvider();
+  const completionProvider = new TranslationKeyCompletionProvider();
+  const semanticTokensProvider = new I18nSemanticTokensProvider();
+  const documentLinkProvider = new I18nDocumentLinkProvider();
+
+  completionProvider.setResultProvider(() => {
+    const result = state.result;
+    if (!result) return undefined;
+    return {
+      allKeys: Object.keys(result.keyValues[result.sourceLocale] ?? {}).sort(),
+      keyValues: result.keyValues,
+      sources: result.sourceUsages.map((u) => ({ key: u.key, filePath: u.filePath }))
+    };
+  });
+
+  semanticTokensProvider.setResultProvider(() => {
+    const result = state.result;
+    if (!result) return undefined;
+    const allKeys = new Set<string>();
+    for (const locale of result.locales) {
+      const values = result.keyValues[locale];
+      if (values) Object.keys(values).forEach((k) => allKeys.add(k));
+    }
+    const missingKeys = new Set(result.missingKeys.map((m) => m.key));
+    return { allKeys, missingKeys };
+  });
+
+  documentLinkProvider.setResultProvider(() => {
+    const result = state.result;
+    if (!result) return undefined;
+    return {
+      keyValues: result.keyValues,
+      localeFiles: result.localeFiles.map((f) => ({ filePath: f.filePath, keys: f.keys })),
+      sourceUsages: result.sourceUsages.map((u) => ({ key: u.key, filePath: u.filePath, range: u.range }))
+    };
+  });
+
+  context.subscriptions.push(outputChannel, diagnostics, localeKeyDecorations, statusBar);
   vscode.window.registerTreeDataProvider('i18ntk.localeHealth', treeProvider);
+  context.subscriptions.push(vscode.window.registerFileDecorationProvider(fileDecorations));
+  context.subscriptions.push(TranslationGridEditorProvider.register(context, () => state.result));
 
   const handleScanResult = (result: any) => {
     keyUsage.update(result);
     treeProvider.setResult(result);
     localeKeyDecorations.update(result);
-    if (hasLensExtension || !vscode.workspace.getConfiguration('i18ntk').get('showInlineDiagnostics', true)) {
+    statusBar.update(result);
+    const sourceKeys = Object.keys(result.keyValues[result.sourceLocale] ?? {});
+    const totalSourceKeyCount = sourceKeys.length;
+    fileDecorations.update(
+      result.localeFiles.map((f: any) => {
+        const localeKeys = result.keyValues[f.locale] ?? {};
+        const coveredKeys = sourceKeys.filter((k: string) => localeKeys[k] !== undefined && localeKeys[k] !== null).length;
+        return {
+          path: f.filePath,
+          coveredKeys,
+          totalKeys: totalSourceKeyCount,
+          missingKeys: totalSourceKeyCount - coveredKeys
+        };
+      })
+    );
+    if (isLensActive() || !vscode.workspace.getConfiguration('i18ntk').get('showInlineDiagnostics', true)) {
       diagnostics.update(undefined);
     } else {
       diagnostics.update(result);
@@ -92,7 +160,34 @@ export function activate(context: vscode.ExtensionContext): void {
   // Clear all i18ntk diagnostics
   context.subscriptions.push(vscode.commands.registerCommand('i18ntk.clearDiagnostics', () => {
     diagnostics.update(undefined);
+    fileDecorations.clear();
+    statusBar.update(undefined);
     vscode.window.showInformationMessage(t('workbench.messages.diagnosticsCleared'));
+  }));
+
+  // Refresh diagnostics from current scan data without re-scanning
+  context.subscriptions.push(vscode.commands.registerCommand('i18ntk.refreshDiagnostics', () => {
+    if (!state.result) {
+      vscode.window.showWarningMessage(t('workbench.messages.reportNeedsScan'));
+      return;
+    }
+    if (isLensActive() || !vscode.workspace.getConfiguration('i18ntk').get('showInlineDiagnostics', true)) {
+      diagnostics.update(undefined);
+    } else {
+      diagnostics.update(state.result);
+    }
+    vscode.window.showInformationMessage(t('workbench.messages.diagnosticsRefreshed'));
+  }));
+
+  // Rebuild all visual providers from current scan data (for external cleaner interop)
+  context.subscriptions.push(vscode.commands.registerCommand('i18ntk.rebuildAllDecorations', () => {
+    if (!state.result) {
+      vscode.window.showWarningMessage(t('workbench.messages.reportNeedsScan'));
+      return;
+    }
+    handleScanResult(state.result);
+    diagnostics.refresh();
+    vscode.window.showInformationMessage(t('workbench.messages.decorationsRebuilt'));
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('i18ntk.validateLocales', async () => {
@@ -174,9 +269,51 @@ export function activate(context: vscode.ExtensionContext): void {
       providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
     })
   );
+  context.subscriptions.push(
+    vscode.languages.registerCompletionItemProvider(
+      documentSelector,
+      completionProvider,
+      "'", '"', '`'
+    )
+  );
+  context.subscriptions.push(
+    vscode.languages.registerDocumentSemanticTokensProvider(
+      documentSelector,
+      semanticTokensProvider,
+      semanticTokensProvider.getLegend()
+    )
+  );
+  context.subscriptions.push(
+    vscode.languages.registerDocumentLinkProvider(
+      documentSelector,
+      documentLinkProvider
+    )
+  );
   if (!hasLensExtension) {
     context.subscriptions.push(vscode.languages.registerHoverProvider(documentSelector, new TranslationHoverProvider(() => state.result)));
   }
+
+  context.subscriptions.push(vscode.commands.registerCommand('i18ntk.openTranslationGrid', async (fileUri?: vscode.Uri) => {
+    let uri: vscode.Uri;
+    if (fileUri) {
+      uri = fileUri;
+    } else {
+      const result = state.result;
+      if (!result || result.localeFiles.length === 0) {
+        vscode.window.showWarningMessage(t('workbench.messages.noLocaleFiles'));
+        return;
+      }
+      const items = result.localeFiles.map((f) => ({
+        label: `${f.locale} — ${f.namespace || path.basename(f.filePath, '.json')}`,
+        description: f.filePath,
+        uri: vscode.Uri.file(f.filePath)
+      }));
+      const picked = await vscode.window.showQuickPick(items, { placeHolder: 'Select a locale file to open in Translation Grid' });
+      if (!picked) return;
+      uri = picked.uri;
+    }
+    await vscode.commands.executeCommand('vscode.openWith', uri, TranslationGridEditorProvider.viewType);
+  }));
 
   if (vscode.workspace.getConfiguration('i18ntk').get('scanOnStartup', false)) {
     vscode.commands.executeCommand('i18ntk.scanWorkspace');
@@ -196,7 +333,39 @@ export function activate(context: vscode.ExtensionContext): void {
       setExtensionLanguage(vscode.workspace.getConfiguration('i18ntk').get('extensionLanguage', 'auto'));
     }
     if (event.affectsConfiguration('i18ntk.diagnosticSeverities') || event.affectsConfiguration('i18ntk.ignoredDiagnostics')) {
-      if (!hasLensExtension) diagnostics.refresh();
+      if (!isLensActive()) diagnostics.refresh();
+    }
+    if (event.affectsConfiguration('i18ntk.showInlineDiagnostics')) {
+      if (!isLensActive()) {
+        if (!vscode.workspace.getConfiguration('i18ntk').get('showInlineDiagnostics', true)) {
+          diagnostics.update(undefined);
+        } else if (state.result) {
+          diagnostics.update(state.result);
+        }
+      }
+    }
+    if (event.affectsConfiguration('i18ntk.showStatusBar')) {
+      statusBar.update(state.result);
+    }
+    if (event.affectsConfiguration('i18ntk.enableFileBadges')) {
+      fileDecorations.clear();
+      const currentResult = state.result;
+      if (currentResult) {
+        const sourceKeys = Object.keys(currentResult.keyValues[currentResult.sourceLocale] ?? {});
+        const totalSourceKeyCount = sourceKeys.length;
+        fileDecorations.update(
+          currentResult.localeFiles.map((f: any) => {
+            const localeKeys = currentResult.keyValues[f.locale] ?? {};
+            const coveredKeys = sourceKeys.filter((k: string) => localeKeys[k] !== undefined && localeKeys[k] !== null).length;
+            return {
+              path: f.filePath,
+              coveredKeys,
+              totalKeys: totalSourceKeyCount,
+              missingKeys: totalSourceKeyCount - coveredKeys
+            };
+          })
+        );
+      }
     }
   }));
 

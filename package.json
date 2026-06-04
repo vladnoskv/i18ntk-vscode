@@ -2,7 +2,7 @@
   "name": "i18ntk-workbench",
   "displayName": "i18ntk Workbench",
   "description": "VS Code workbench for i18ntk projects: setup, scanning, validation, usage reports, key management, and CLI-backed Auto Translate.",
-  "version": "1.1.3",
+  "version": "1.2.0",
   "publisher": "VladNoskov",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -214,6 +214,31 @@
             "dryRun"
           ],
           "description": "Auto Translate mode: keep existing translations, retranslate everything, or preview without writing files."
+        },
+        "i18ntk.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a persistent status bar item with locale counts, missing keys, and health score. Disable if you prefer a cleaner status bar."
+        },
+        "i18ntk.enableKeyCompletion": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable IntelliSense autocompletion of translation keys in source files when typing inside t() or i18n.t() calls."
+        },
+        "i18ntk.enableFileBadges": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show translation coverage badges on locale JSON files in the Explorer (green for complete, yellow for partial, red for empty)."
+        },
+        "i18ntk.enableSemanticTokens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Apply semantic highlighting to translation keys in source code and JSON locale files. Missing keys are shown with deprecated styling."
+        },
+        "i18ntk.enableDocumentLinks": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Ctrl+Click navigation from t('key') calls to locale file definitions, and from JSON keys back to source usages."
         }
       }
     },
@@ -326,6 +351,84 @@
         "title": "i18ntk: Clear Diagnostics",
         "category": "i18ntk",
         "icon": "$(clear-all)"
+      },
+      {
+        "command": "i18ntk.openTranslationGrid",
+        "title": "i18ntk: Open Translation Grid",
+        "category": "i18ntk",
+        "icon": "$(table)"
+      },
+      {
+        "command": "i18ntk.refreshDiagnostics",
+        "title": "i18ntk: Refresh Diagnostics",
+        "category": "i18ntk",
+        "icon": "$(debug-rerun)"
+      },
+      {
+        "command": "i18ntk.rebuildAllDecorations",
+        "title": "i18ntk: Rebuild All Decorations",
+        "category": "i18ntk",
+        "icon": "$(paintcan)"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "i18ntk.translationGrid",
+        "displayName": "i18ntk Translation Grid",
+        "selector": [
+          {
+            "filenamePattern": "**/locales/**/*.json"
+          },
+          {
+            "filenamePattern": "**/locale/**/*.json"
+          },
+          {
+            "filenamePattern": "**/i18n/**/*.json"
+          },
+          {
+            "filenamePattern": "**/translations/**/*.json"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "i18ntk.gettingStarted",
+        "title": "Getting Started with i18ntk",
+        "description": "Set up i18ntk for your project, scan translation keys, understand diagnostics, and configure auto-translate.",
+        "steps": [
+          {
+            "id": "detectLocaleDirectory",
+            "title": "Detect or Choose Your Locale Directory",
+            "description": "i18ntk needs to know where your locale JSON files are stored. Common locations are locales/, locale/, i18n/, translations/, public/locales/, and src/locales/.",
+            "media": { "markdown": "walkthroughs/getting-started.md#1-detect-or-choose-your-locale-directory" }
+          },
+          {
+            "id": "runFirstScan",
+            "title": "Run Your First Scan",
+            "description": "After the locale directory is set, run the workspace scanner to index all translation keys. The scanner discovers source files, parses locale JSONs, and generates diagnostics.",
+            "media": { "markdown": "walkthroughs/getting-started.md#2-run-your-first-scan" }
+          },
+          {
+            "id": "understandTree",
+            "title": "Understand the Locale Health Tree",
+            "description": "The Locale Health view in the Activity Bar shows Actions, Project Health stats, Missing Keys, Placeholder Mismatches, and more.",
+            "media": { "markdown": "walkthroughs/getting-started.md#3-understand-the-locale-health-tree" }
+          },
+          {
+            "id": "configureAutoTranslate",
+            "title": "Configure Auto Translate",
+            "description": "i18ntk supports automatic translation via Google Translate (free), DeepL, and LibreTranslate. Choose your provider, select target locales, and run auto-translate.",
+            "media": { "markdown": "walkthroughs/getting-started.md#4-configure-auto-translate" }
+          },
+          {
+            "id": "dailyWorkflow",
+            "title": "Daily Workflow & Next Steps",
+            "description": "Open the Activity Bar, scan on save, use quick fixes, view reports, and explore the Translation Grid Editor for a spreadsheet view of translations.",
+            "media": { "markdown": "walkthroughs/getting-started.md#5-daily-workflow" }
+          }
+        ]
       }
     ],
     "viewsContainers": {
@@ -366,6 +469,11 @@
           "command": "i18ntk.openSettings",
           "when": "view == i18ntk.localeHealth",
           "group": "navigation@4"
+        },
+        {
+          "command": "i18ntk.openTranslationGrid",
+          "when": "view == i18ntk.localeHealth",
+          "group": "navigation@5"
         },
         {
           "command": "i18ntk.validateLocales",
@@ -439,7 +547,7 @@
     "test:unit": "node --test out/test/unit/*.test.js",
     "test": "npm run test:compile && npm run test:unit",
     "verify": "npm test && npm run package",
-    "package": "vsce package --out ../i18ntk-workbench-1.1.3.vsix"
+    "package": "vsce package --out ../i18ntk-workbench-1.2.0.vsix"
   },
   "dependencies": {
     "i18ntk": "file:../i18ntk-4.4.2.tgz"

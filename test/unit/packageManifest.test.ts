@@ -61,7 +61,7 @@ test('package scripts separate compile, locale asset copy, unit tests, aggregate
   assert.equal(manifest.scripts?.['test:unit'], 'node --test out/test/unit/*.test.js');
   assert.equal(manifest.scripts?.test, 'npm run test:compile && npm run test:unit');
   assert.equal(manifest.scripts?.verify, 'npm test && npm run package');
-  assert.equal(manifest.scripts?.package, 'vsce package --out ../i18ntk-workbench-1.1.3.vsix');
+  assert.equal(manifest.scripts?.package, 'vsce package --out ../i18ntk-workbench-1.2.0.vsix');
   assert.ok(manifest.dependencies?.i18ntk);
   assert.ok(manifest.devDependencies?.['@vscode/vsce']);
   assert.equal(manifest.devDependencies?.vsce, undefined);

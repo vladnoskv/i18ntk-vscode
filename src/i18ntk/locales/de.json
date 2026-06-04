@@ -17,7 +17,11 @@
       "reportSaved": "Bericht gespeichert unter {path}",
       "localeDirectorySet": "i18ntk-Sprachverzeichnis auf {path} gesetzt.",
       "localeDirectoryDetected": "i18ntk-Sprachverzeichnis erkannt: {path}.",
-      "reportNeedsScan": "Führe i18ntk: Arbeitsbereich scannen aus, bevor du den Bericht öffnest."
+      "reportNeedsScan": "Führe i18ntk: Arbeitsbereich scannen aus, bevor du den Bericht öffnest.",
+      "noLocaleFiles": "Keine Sprachdateien gefunden. Führe zuerst Arbeitsbereich scannen aus.",
+      "noScanData": "Keine Scandaten verfügbar. Führe zuerst i18ntk: Arbeitsbereich scannen aus.",
+      "diagnosticsRefreshed": "i18ntk-Diagnosen aus aktuellen Scandaten aktualisiert.",
+      "decorationsRebuilt": "i18ntk-Dekorationen aus aktuellen Scandaten neu aufgebaut."
     },
     "titles": {
       "openTranslationKey": "Zu öffnender Übersetzungsschlüssel",

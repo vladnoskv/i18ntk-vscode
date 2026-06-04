@@ -63,7 +63,12 @@ export class WorkbenchSettingsPanel {
       customWrappers: config.get('customWrappers', []) as string[],
       autoTranslateProvider: config.get('autoTranslateProvider', 'google'),
       autoTranslateTargets: config.get('autoTranslateTargets', []) as string[],
-      autoTranslateMode: config.get('autoTranslateMode', 'onlyMissing')
+      autoTranslateMode: config.get('autoTranslateMode', 'onlyMissing'),
+      showStatusBar: config.get('showStatusBar', true),
+      enableKeyCompletion: config.get('enableKeyCompletion', true),
+      enableFileBadges: config.get('enableFileBadges', true),
+      enableSemanticTokens: config.get('enableSemanticTokens', true),
+      enableDocumentLinks: config.get('enableDocumentLinks', true)
     };
     const setupSummary = discovery
       ? {
@@ -148,6 +153,12 @@ export class WorkbenchSettingsPanel {
   <label><input type="checkbox" id="showInlineDiagnostics" ${model.showInlineDiagnostics ? 'checked' : ''}>Show inline diagnostics</label>
   <label><input type="checkbox" id="showHoverTranslations" ${model.showHoverTranslations ? 'checked' : ''}>Show hover translations</label>
   <label><input type="checkbox" id="highlightLocaleKeys" ${model.highlightLocaleKeys ? 'checked' : ''}>Color-code locale JSON keys</label>
+  <h2>New Feature Toggles</h2>
+  <label><input type="checkbox" id="showStatusBar" ${model.showStatusBar ? 'checked' : ''}>Show persistent status bar with translation stats</label>
+  <label><input type="checkbox" id="enableKeyCompletion" ${model.enableKeyCompletion ? 'checked' : ''}>Enable translation key IntelliSense autocompletion</label>
+  <label><input type="checkbox" id="enableFileBadges" ${model.enableFileBadges ? 'checked' : ''}>Show Explorer file badges on locale JSON files</label>
+  <label><input type="checkbox" id="enableSemanticTokens" ${model.enableSemanticTokens ? 'checked' : ''}>Highlight translation keys with semantic tokens</label>
+  <label><input type="checkbox" id="enableDocumentLinks" ${model.enableDocumentLinks ? 'checked' : ''}>Enable Ctrl+Click navigation links to locale files</label>
   <h2>Problem Diagnostics</h2>
   <section class="grid">
     ${DIAGNOSTIC_RULES.map((rule) => selectField(`severity-${rule.code}`, rule.label, model.diagnosticSeverities[rule.code] ?? DEFAULT_DIAGNOSTIC_SEVERITIES[rule.code], ['error', 'warning', 'off', 'ignore'], rule.hint)).join('')}
@@ -217,7 +228,12 @@ export class WorkbenchSettingsPanel {
         autoTranslateMode: document.getElementById('autoTranslateMode').value,
         autoTranslateTargets: document.getElementById('autoTranslateTargets').value.split(',').map(v => v.trim()).filter(Boolean),
         exclude: values('excludeList'),
-        customWrappers: values('wrapperList')
+        customWrappers: values('wrapperList'),
+        showStatusBar: document.getElementById('showStatusBar').checked,
+        enableKeyCompletion: document.getElementById('enableKeyCompletion').checked,
+        enableFileBadges: document.getElementById('enableFileBadges').checked,
+        enableSemanticTokens: document.getElementById('enableSemanticTokens').checked,
+        enableDocumentLinks: document.getElementById('enableDocumentLinks').checked
       };
     }
     document.getElementById('addExclude').addEventListener('click', () => addRow('excludeList'));
@@ -301,7 +317,12 @@ const SETTINGS_KEYS = [
   'autoTranslateMode',
   'autoTranslateTargets',
   'exclude',
-  'customWrappers'
+  'customWrappers',
+  'showStatusBar',
+  'enableKeyCompletion',
+  'enableFileBadges',
+  'enableSemanticTokens',
+  'enableDocumentLinks'
 ];
 
 const DEFAULT_DIAGNOSTIC_SEVERITIES: Record<string, string> = {

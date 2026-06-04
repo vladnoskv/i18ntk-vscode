@@ -17,7 +17,11 @@
       "reportSaved": "Report saved to {path}",
       "localeDirectorySet": "i18ntk locale directory set to {path}.",
       "localeDirectoryDetected": "i18ntk locale directory detected: {path}.",
-      "reportNeedsScan": "Run i18ntk: Scan Workspace before opening the report."
+      "reportNeedsScan": "Run i18ntk: Scan Workspace before opening the report.",
+      "noLocaleFiles": "No locale files found. Run Scan Workspace first.",
+      "noScanData": "No scan data available. Run i18ntk: Scan Workspace first.",
+      "diagnosticsRefreshed": "i18ntk diagnostics refreshed from current scan data.",
+      "decorationsRebuilt": "i18ntk decorations rebuilt from current scan data."
     },
     "titles": {
       "openTranslationKey": "Translation key to open",

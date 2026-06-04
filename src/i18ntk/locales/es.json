@@ -17,7 +17,11 @@
       "reportSaved": "Informe guardado en {path}",
       "localeDirectorySet": "Directorio de locales de i18ntk establecido en {path}.",
       "localeDirectoryDetected": "Directorio de locales de i18ntk detectado: {path}.",
-      "reportNeedsScan": "Ejecuta i18ntk: Analizar espacio de trabajo antes de abrir el informe."
+      "reportNeedsScan": "Ejecuta i18ntk: Analizar espacio de trabajo antes de abrir el informe.",
+      "noLocaleFiles": "No se encontraron archivos de locales. Ejecuta Analizar espacio de trabajo primero.",
+      "noScanData": "No hay datos de analisis disponibles. Ejecuta i18ntk: Analizar espacio de trabajo primero.",
+      "diagnosticsRefreshed": "Diagnosticos de i18ntk actualizados desde los datos de analisis actuales.",
+      "decorationsRebuilt": "Decoraciones de i18ntk reconstruidas desde los datos de analisis actuales."
     },
     "titles": {
       "openTranslationKey": "Clave de traduccion para abrir",
