@@ -2,7 +2,7 @@
   "name": "i18ntk-workbench",
   "displayName": "i18ntk Workbench",
   "description": "VS Code workbench for i18ntk projects: setup, scanning, validation, usage reports, key management, and CLI-backed Auto Translate.",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "publisher": "VladNoskov",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -429,31 +429,41 @@
             "id": "detectLocaleDirectory",
             "title": "Detect or Choose Your Locale Directory",
             "description": "i18ntk needs to know where your locale JSON files are stored. Common locations are locales/, locale/, i18n/, translations/, public/locales/, and src/locales/.",
-            "media": { "markdown": "walkthroughs/getting-started.md#1-detect-or-choose-your-locale-directory" }
+            "media": {
+              "markdown": "walkthroughs/getting-started.md#1-detect-or-choose-your-locale-directory"
+            }
           },
           {
             "id": "runFirstScan",
             "title": "Run Your First Scan",
             "description": "After the locale directory is set, run the workspace scanner to index all translation keys. The scanner discovers source files, parses locale JSONs, and generates diagnostics.",
-            "media": { "markdown": "walkthroughs/getting-started.md#2-run-your-first-scan" }
+            "media": {
+              "markdown": "walkthroughs/getting-started.md#2-run-your-first-scan"
+            }
           },
           {
             "id": "understandTree",
             "title": "Understand the Locale Health Tree",
             "description": "The Locale Health view in the Activity Bar shows Actions, Project Health stats, Missing Keys, Placeholder Mismatches, and more.",
-            "media": { "markdown": "walkthroughs/getting-started.md#3-understand-the-locale-health-tree" }
+            "media": {
+              "markdown": "walkthroughs/getting-started.md#3-understand-the-locale-health-tree"
+            }
           },
           {
             "id": "configureAutoTranslate",
             "title": "Configure Auto Translate",
             "description": "i18ntk supports automatic translation via Google Translate (free), DeepL, and LibreTranslate. Choose your provider, select target locales, and run auto-translate.",
-            "media": { "markdown": "walkthroughs/getting-started.md#4-configure-auto-translate" }
+            "media": {
+              "markdown": "walkthroughs/getting-started.md#4-configure-auto-translate"
+            }
           },
           {
             "id": "dailyWorkflow",
             "title": "Daily Workflow & Next Steps",
             "description": "Open the Activity Bar, scan on save, use quick fixes, view reports, and explore the Translation Grid Editor for a spreadsheet view of translations.",
-            "media": { "markdown": "walkthroughs/getting-started.md#5-daily-workflow" }
+            "media": {
+              "markdown": "walkthroughs/getting-started.md#5-daily-workflow"
+            }
           }
         ]
       }
@@ -574,10 +584,10 @@
     "test:unit": "node --test out/test/unit/*.test.js",
     "test": "npm run test:compile && npm run test:unit",
     "verify": "npm test && npm run package",
-    "package": "vsce package --out ../i18ntk-workbench-1.2.0.vsix"
+    "package": "vsce package --out ../i18ntk-workbench-1.2.1.vsix"
   },
   "dependencies": {
-    "i18ntk": "file:../i18ntk-4.4.2.tgz"
+    "i18ntk": "file:../i18ntk-4.4.3.tgz"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
