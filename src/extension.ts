@@ -39,9 +39,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const localeKeyDecorations = new LocaleKeyDecorationProvider();
   const treeProvider = new LocaleHealthTreeProvider();
   const keyUsage = new KeyUsageService();
-  const reportPanel = new ReportWebviewPanel(context, async () => {
-    await vscode.commands.executeCommand('i18ntk.scanWorkspace');
-  });
+  const reportPanel = new ReportWebviewPanel(context);
   const lensExtension =
     vscode.extensions.getExtension('VladNoskov.i18ntk-lens') ??
     vscode.extensions.getExtension('vladnoskv.i18ntk-lens');
@@ -128,7 +126,7 @@ export function activate(context: vscode.ExtensionContext): void {
   // Clear diagnostics before scan starts to prevent stale linting
   state.onClearDiagnostics = () => diagnostics.update(undefined);
   registerRefreshTreeCommand(context, treeProvider);
-  registerOpenReportCommand(context, state, reportPanel);
+  registerOpenReportCommand(context, logger, reportPanel);
   registerAddAutoTranslatePlaceholderCommand(context);
   registerAddMissingKeyCommand(context, state);
   registerAutoTranslateCommand(context, state, logger);

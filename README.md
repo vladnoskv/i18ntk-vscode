@@ -115,9 +115,19 @@ Requirements:
 - **Getting Started walkthrough**: guided 5-step onboarding available from Help → Get Started.
 - **Hover translations**: shows locale values for `t("key")`, `i18n.t(...)`, `translate(...)`, `$t(...)`, and configured custom wrappers.
 - **Quick fixes**: add missing keys, open any i18ntk diagnostic key in locale files, or add Auto Translate residual keys to protection from the editor or Problems panel.
-- **Summary report**: validate, analyze usage, Auto Translate, filter issues, copy individual issues, open files, add keys, review Auto Translate residuals, copy Markdown, save reports, and open settings.
+- **Report dashboard**: CLI-backed completeness, missing key, unused key, placeholder, untranslated, expansion, and hardcoded text reporting with filters, file opening, refresh, and JSON/Markdown/HTML exports.
 - **CLI-backed Auto Translate**: runs local `i18ntk-translate` with non-interactive, placeholder-safe defaults.
 - **Local-first behavior**: no telemetry; provider network calls happen only when you explicitly run Auto Translate.
+
+## Workbench Reports
+
+The i18ntk Workbench provides an interactive VS Code report dashboard powered by the main i18ntk package.
+
+- CLI: automation and CI
+- Workbench: project-level reporting and management
+- Lens: inline editor feedback
+
+The report dashboard shows completeness, missing keys, unused keys, placeholder mismatches, likely untranslated values, expansion risk, hardcoded text findings, and export actions.
 
 ## Command Reference
 
@@ -125,7 +135,11 @@ Requirements:
 | --- | --- | --- |
 | `i18ntk: Scan Workspace` | Detects config, scans locale/source files, updates diagnostics, tree views, and report state. | No file changes. |
 | `i18ntk: Refresh Locale Health` | Refreshes the sidebar tree view. | No file changes. |
-| `i18ntk: Open Summary Report` | Opens the report webview with validation, usage, issue, and workflow actions. | Only writes when you choose an action such as save report, add key, or Auto Translate. |
+| `i18ntk: Open Report` | Opens the CLI-backed report dashboard with completeness, issue filters, refresh, file navigation, and export actions. | No file changes. |
+| `i18ntk: Refresh Report` | Re-runs the main i18ntk report command and refreshes the dashboard. | No file changes. |
+| `i18ntk: Export Report as JSON` | Generates and opens `i18ntk-reports/i18ntk-report.json`. | Report file. |
+| `i18ntk: Export Report as Markdown` | Generates and opens `i18ntk-reports/i18ntk-report.md`. | Report file. |
+| `i18ntk: Export Report as HTML` | Generates and opens `i18ntk-reports/i18ntk-report.html`. | Report file. |
 | `i18ntk: Add Missing Key` | Adds a translation key to locale JSON files. | Locale JSON files. |
 | `i18ntk: Add Key to Auto Translate Protection` | Adds a translation key to `i18ntk-auto-translate.json` so Auto Translate keeps it unchanged. | Auto Translate protection file. |
 | `i18ntk: Auto Translate Missing` | Runs local `i18ntk-translate` for selected target locales. | Target locale JSON files and CLI report output. |

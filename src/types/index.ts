@@ -153,11 +153,81 @@ export interface I18nValidationResult {
   issues: Array<MissingKeyIssue | PlaceholderMismatchIssue | InvalidKeyNameIssue | RiskyContentIssue>;
 }
 
-export interface I18nReport {
-  title: string;
-  markdown: string;
-  result: I18nScanResult;
+export interface LocaleReport {
+  locale: string;
+  totalKeys: number;
+  translatedKeys: number;
+  missingKeys: number;
+  completenessPct: number;
+  placeholderMismatchCount: number;
+  likelyUntranslatedCount: number;
+  expansionRiskCount: number;
 }
+
+export type I18ntkIssueType =
+  | 'missing_key'
+  | 'unused_key'
+  | 'placeholder_mismatch'
+  | 'likely_untranslated'
+  | 'expansion_risk'
+  | 'hardcoded_text';
+
+export interface I18ntkIssue {
+  id: string;
+  type: I18ntkIssueType;
+  severity: 'info' | 'warning' | 'error';
+  locale?: string;
+  key?: string;
+  file?: string;
+  line?: number;
+  column?: number;
+  confidence?: number;
+  message: string;
+  suggestion?: string;
+}
+
+export interface I18ntkReport {
+  schemaVersion: 1;
+  generatedAt: string;
+  projectRoot: string;
+  config: {
+    sourceLocale: string;
+    localesDir: string;
+    namespaces?: string[];
+  };
+  summary: {
+    totalKeys: number;
+    localeCount: number;
+    averageCompletenessPct: number;
+    issueCount: number;
+    missingKeyCount: number;
+    unusedKeyCount: number;
+    placeholderMismatchCount: number;
+    likelyUntranslatedCount: number;
+    expansionRiskCount: number;
+    hardcodedTextCount: number;
+  };
+  locales: LocaleReport[];
+  issues: I18ntkIssue[];
+  exports?: {
+    json?: string;
+    markdown?: string;
+    html?: string;
+  };
+}
+
+export type I18nReport = I18ntkReport;
+
+export type WebviewToExtensionMessage =
+  | { type: 'refreshReport' }
+  | { type: 'openIssue'; issueId: string }
+  | { type: 'openFile'; file: string; line?: number; column?: number }
+  | { type: 'exportReport'; format: 'json' | 'markdown' | 'html' };
+
+export type ExtensionToWebviewMessage =
+  | { type: 'reportLoaded'; report: I18ntkReport }
+  | { type: 'reportLoading' }
+  | { type: 'reportError'; message: string; details?: string };
 
 export interface DiagnosticLike {
   filePath: string;

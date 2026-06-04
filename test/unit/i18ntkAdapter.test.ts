@@ -30,8 +30,10 @@ test('LocalI18ntkAdapter returns normalized scan and report data', async () => {
   const report = await adapter.generateReport(result);
 
   assert.equal(result.sourceLocale, 'en');
-  assert.equal(report.title, 'i18ntk Workbench Summary');
-  assert.equal(report.markdown.includes('Missing Keys'), true);
+  assert.equal(report.schemaVersion, 1);
+  assert.equal(report.config.sourceLocale, 'en');
+  assert.equal(report.summary.totalKeys, result.totalKeys);
+  assert.equal(Array.isArray(report.issues), true);
 });
 
 test('LocalI18ntkAdapter does not run background CLI validation by default', async () => {

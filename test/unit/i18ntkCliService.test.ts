@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { buildAutoTranslateArgs, findI18ntkScript, getDirectoryLocaleLayout } from '../../src/services/i18ntkCliService';
+import { buildAutoTranslateArgs, buildReportArgs, findI18ntkScript, getDirectoryLocaleLayout } from '../../src/services/i18ntkCliService';
 import { ResolvedI18ntkConfig } from '../../src/types';
 
 function config(rootPath: string): ResolvedI18ntkConfig {
@@ -72,4 +72,21 @@ test('findI18ntkScript recommends local npm install when the CLI is missing', ()
     findI18ntkScript.installMessage,
     /npm install i18ntk/
   );
+});
+
+test('buildReportArgs requests stable report formats with locale config', () => {
+  const rootPath = path.resolve(process.cwd(), 'test/fixtures/basic-react-i18n');
+  const cfg = config(rootPath);
+  const outDir = path.join(rootPath, 'i18ntk-reports');
+
+  const args = buildReportArgs('C:/tools/i18ntk-report.js', cfg, {
+    outDir,
+    formats: ['json', 'markdown', 'html']
+  });
+
+  assert.deepEqual(args.slice(0, 4), ['C:/tools/i18ntk-report.js', '--json', '--markdown', '--html']);
+  assert.equal(args.includes(`--source-dir=${rootPath}`), true);
+  assert.equal(args.includes(`--i18n-dir=${cfg.localeDirectory}`), true);
+  assert.equal(args.includes('--source-language=en'), true);
+  assert.equal(args.includes(`--out=${outDir}`), true);
 });

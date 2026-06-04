@@ -5,3 +5,4 @@ node_modules/
 .DS_Store
 DEV_NOTES.md
 *.dev.md
+tmp-report-out/

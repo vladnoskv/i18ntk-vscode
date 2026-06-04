@@ -256,9 +256,36 @@
       },
       {
         "command": "i18ntk.openReport",
-        "title": "i18ntk: Open Summary Report",
+        "title": "i18ntk: Open Report",
         "category": "i18ntk",
         "icon": "$(preview)"
+      },
+      {
+        "command": "i18ntkWorkbench.openReport",
+        "title": "i18ntk: Open Report",
+        "category": "i18ntk",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "i18ntkWorkbench.refreshReport",
+        "title": "i18ntk: Refresh Report",
+        "category": "i18ntk",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "i18ntkWorkbench.exportReportJson",
+        "title": "i18ntk: Export Report as JSON",
+        "category": "i18ntk"
+      },
+      {
+        "command": "i18ntkWorkbench.exportReportMarkdown",
+        "title": "i18ntk: Export Report as Markdown",
+        "category": "i18ntk"
+      },
+      {
+        "command": "i18ntkWorkbench.exportReportHtml",
+        "title": "i18ntk: Export Report as HTML",
+        "category": "i18ntk"
       },
       {
         "command": "i18ntk.addAutoTranslatePlaceholder",

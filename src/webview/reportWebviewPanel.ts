@@ -1,95 +1,102 @@
 import * as vscode from 'vscode';
-import { I18nReport } from '../types';
+import path from 'node:path';
+import { I18ntkIssue, I18ntkReport, WebviewToExtensionMessage } from '../types';
 import { renderReportHtml } from './reportHtmlRenderer';
 
 export class ReportWebviewPanel {
   private panel: vscode.WebviewPanel | undefined;
-  private currentReport: I18nReport | undefined;
+  private currentReport: I18ntkReport | undefined;
 
-  constructor(private readonly context: vscode.ExtensionContext, private readonly onRefresh: () => Promise<void>) {}
+  constructor(private readonly context: vscode.ExtensionContext) {}
 
-  open(report: I18nReport): void {
+  open(report: I18ntkReport): void {
     this.currentReport = report;
-    if (!this.panel) {
-      const panel = vscode.window.createWebviewPanel(
-        'i18ntkReport',
-        'i18ntk Workbench Report',
-        { viewColumn: vscode.ViewColumn.One, preserveFocus: true },
-        { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [] }
-      );
-      this.panel = panel;
-      panel.onDidDispose(() => {
-        this.panel = undefined;
-      }, null, this.context.subscriptions);
-      panel.webview.onDidReceiveMessage(async (message: any) => {
-        switch (message.command) {
-          case 'refresh':
-            await this.onRefresh();
-            break;
-          case 'exportMarkdown':
-            if (this.currentReport) {
-              await vscode.env.clipboard.writeText(this.currentReport.markdown);
-              vscode.window.showInformationMessage('Report markdown copied to clipboard.');
-            }
-            break;
-          case 'copyIssue':
-            if (message.issueText) {
-              await vscode.env.clipboard.writeText(message.issueText);
-              vscode.window.showInformationMessage('Issue copied to clipboard.');
-            }
-            break;
-          case 'saveReport':
-            if (this.currentReport) {
-              await this.saveReportToFile(this.currentReport);
-            }
-            break;
-          case 'validateLocales':
-            await vscode.commands.executeCommand('i18ntk.validateLocales');
-            break;
-          case 'analyzeUsage':
-            await vscode.commands.executeCommand('i18ntk.analyzeUsage');
-            break;
-          case 'autoTranslate':
-            await vscode.commands.executeCommand('i18ntk.autoTranslateMissing');
-            break;
-          case 'addMissingKey':
-            await vscode.commands.executeCommand('i18ntk.addMissingKey', message.key);
-            break;
-          case 'addAutoTranslatePlaceholder':
-            await vscode.commands.executeCommand('i18ntk.addAutoTranslatePlaceholder', message.key);
-            break;
-          case 'openSettings':
-            await vscode.commands.executeCommand('i18ntk.openSettings');
-            break;
-          case 'openFile':
-            if (message.filePath) {
-              const uri = vscode.Uri.file(message.filePath);
-              await vscode.window.showTextDocument(uri, { preview: false });
-            }
-            break;
-        }
-      }, null, this.context.subscriptions);
-    }
-    const nonce = createNonce();
-    this.panel!.webview.html = renderReportHtml(report, nonce);
+    this.ensurePanel();
+    this.panel!.webview.html = renderReportHtml(report, createNonce());
     this.panel!.reveal();
   }
 
-  private async saveReportToFile(report: I18nReport): Promise<void> {
-    const folder = vscode.workspace.workspaceFolders?.[0];
-    if (!folder) {
-      vscode.window.showWarningMessage('No workspace open to save the report.');
-      return;
-    }
-    const uri = await vscode.window.showSaveDialog({
-      defaultUri: vscode.Uri.file(`${folder.uri.fsPath}/i18ntk-report.md`),
-      filters: { 'Markdown': ['md'], 'All Files': ['*'] }
-    });
-    if (uri) {
-      await vscode.workspace.fs.writeFile(uri, Buffer.from(report.markdown, 'utf8'));
-      vscode.window.showInformationMessage(`Report saved to ${uri.fsPath}`);
+  showLoading(): void {
+    this.ensurePanel();
+    this.panel!.webview.html = this.renderMessage('Loading i18ntk report...', undefined);
+    this.panel!.reveal();
+  }
+
+  showError(message: string, details?: string): void {
+    this.ensurePanel();
+    this.panel!.webview.html = this.renderMessage(message, details);
+    this.panel!.reveal();
+  }
+
+  private ensurePanel(): void {
+    if (this.panel) return;
+    const panel = vscode.window.createWebviewPanel(
+      'i18ntkReport',
+      'i18ntk Workbench Report',
+      { viewColumn: vscode.ViewColumn.One, preserveFocus: true },
+      { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [] }
+    );
+    this.panel = panel;
+    panel.onDidDispose(() => {
+      this.panel = undefined;
+    }, null, this.context.subscriptions);
+    panel.webview.onDidReceiveMessage((message: WebviewToExtensionMessage) => this.handleMessage(message), null, this.context.subscriptions);
+  }
+
+  private async handleMessage(message: WebviewToExtensionMessage): Promise<void> {
+    switch (message.type) {
+      case 'refreshReport':
+        await vscode.commands.executeCommand('i18ntkWorkbench.refreshReport');
+        break;
+      case 'exportReport':
+        await vscode.commands.executeCommand(`i18ntkWorkbench.exportReport${capitalize(message.format)}`);
+        break;
+      case 'openIssue':
+        await this.openIssue(message.issueId);
+        break;
+      case 'openFile':
+        await this.openFile(message.file, message.line, message.column);
+        break;
     }
   }
+
+  private async openIssue(issueId: string): Promise<void> {
+    const issue = this.currentReport?.issues.find((item: I18ntkIssue) => item.id === issueId);
+    if (!issue?.file) return;
+    await this.openFile(issue.file, issue.line, issue.column);
+  }
+
+  private async openFile(file: string, line?: number, column?: number): Promise<void> {
+    const root = this.currentReport?.projectRoot;
+    if (!root) return;
+    const absolutePath = path.isAbsolute(file) ? file : path.resolve(root, file);
+    const relative = path.relative(root, absolutePath);
+    if (relative.startsWith('..') || path.isAbsolute(relative)) {
+      vscode.window.showWarningMessage('i18ntk refused to open a report path outside the workspace.');
+      return;
+    }
+    const document = await vscode.workspace.openTextDocument(vscode.Uri.file(absolutePath));
+    const editor = await vscode.window.showTextDocument(document, { preview: false });
+    if (line && line > 0) {
+      const position = new vscode.Position(line - 1, Math.max(0, (column || 1) - 1));
+      editor.selection = new vscode.Selection(position, position);
+      editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenterIfOutsideViewport);
+    }
+  }
+
+  private renderMessage(message: string, details?: string): string {
+    const nonce = createNonce();
+    return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>body{font-family:var(--vscode-font-family);background:var(--vscode-editor-background);color:var(--vscode-foreground);padding:24px}p{color:var(--vscode-descriptionForeground);white-space:pre-wrap}button{color:var(--vscode-button-foreground);background:var(--vscode-button-background);border:0;padding:7px 10px;border-radius:3px;cursor:pointer}</style></head>
+<body><h1>${escapeHtml(message)}</h1>${details ? `<p>${escapeHtml(details)}</p>` : ''}<button id="refresh">Refresh</button>
+<script nonce="${nonce}">const vscode=acquireVsCodeApi();document.getElementById('refresh').addEventListener('click',()=>vscode.postMessage({type:'refreshReport'}));</script></body></html>`;
+  }
+}
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 function createNonce(): string {
@@ -99,4 +106,8 @@ function createNonce(): string {
     nonce += chars[Math.floor(Math.random() * chars.length)];
   }
   return nonce;
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char] ?? char));
 }

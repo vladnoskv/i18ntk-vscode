@@ -1,157 +1,222 @@
-import { I18nReport } from '../types';
+import { I18ntkIssue, I18ntkIssueType, I18ntkReport } from '../types';
 
-export function renderReportHtml(report: I18nReport, nonce: string): string {
-  const result = report.result;
-  const residuals = result.autoTranslateResiduals ?? [];
-  const issueCount = result.missingKeys.length + result.placeholderMismatches.length + result.invalidKeyNames.length + result.riskyContent.length + result.expansionRisks.length + residuals.length;
+const ISSUE_TABS: Array<{ id: string; label: string; type?: I18ntkIssueType }> = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'missing', label: 'Missing Keys', type: 'missing_key' },
+  { id: 'unused', label: 'Unused Keys', type: 'unused_key' },
+  { id: 'placeholders', label: 'Placeholder Mismatches', type: 'placeholder_mismatch' },
+  { id: 'untranslated', label: 'Likely Untranslated', type: 'likely_untranslated' },
+  { id: 'expansion', label: 'Expansion Risk', type: 'expansion_risk' },
+  { id: 'hardcoded', label: 'Hardcoded Text', type: 'hardcoded_text' },
+  { id: 'exports', label: 'Exports' }
+];
+
+export function renderReportHtml(report: I18ntkReport, nonce: string): string {
+  const reportJson = escapeScriptJson(report);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${escapeAttr(nonce)}';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(report.title)}</title>
+  <title>i18ntk Report</title>
   <style>
     body { box-sizing: border-box; margin: 0; font-family: var(--vscode-font-family); color: var(--vscode-foreground); background: var(--vscode-editor-background); padding: 20px; }
     *, *::before, *::after { box-sizing: inherit; }
-    header { border-bottom: 1px solid var(--vscode-panel-border); margin-bottom: 18px; padding-bottom: 14px; }
-    h1 { font-size: 24px; margin: 0 0 8px; }
-    h2 { font-size: 16px; margin: 24px 0 8px; }
+    header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--vscode-panel-border); padding-bottom: 14px; margin-bottom: 18px; }
+    h1 { margin: 0 0 6px; font-size: 24px; }
+    h2 { margin: 22px 0 10px; font-size: 17px; }
     p { color: var(--vscode-descriptionForeground); line-height: 1.45; }
-    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
-    .metric { border: 1px solid var(--vscode-panel-border); border-radius: 6px; padding: 12px; min-width: 0; }
-    .metric span { display: block; color: var(--vscode-descriptionForeground); margin-bottom: 5px; }
-    .metric strong { display: block; font-size: 22px; }
-    .metric.error strong { color: var(--vscode-errorForeground); }
-    .metric.warn strong { color: var(--vscode-editorWarning-foreground); }
-    .summary { margin: 16px 0; padding: 12px; border-left: 3px solid var(--vscode-focusBorder); background: var(--vscode-sideBar-background); }
-    .issue-tools { display: grid; grid-template-columns: minmax(180px, 320px) auto; align-items: end; gap: 10px; margin: 18px 0 8px; }
-    .issue-tools label { display: grid; gap: 5px; font-weight: 600; }
-    .issue-tools input { width: 100%; padding: 7px 8px; border: 1px solid var(--vscode-input-border); background: var(--vscode-input-background); color: var(--vscode-input-foreground); border-radius: 3px; }
-    .status { color: var(--vscode-descriptionForeground); min-height: 18px; }
-    .table-wrap { overflow-x: auto; }
-    table { border-collapse: collapse; width: 100%; min-width: 620px; margin-bottom: 12px; }
-    th, td { border-bottom: 1px solid var(--vscode-panel-border); padding: 8px; text-align: left; vertical-align: top; }
-    th { font-weight: 600; background: var(--vscode-sideBar-background); }
     button { color: var(--vscode-button-foreground); background: var(--vscode-button-background); border: 0; padding: 7px 10px; border-radius: 3px; cursor: pointer; white-space: nowrap; }
     button:hover { background: var(--vscode-button-hoverBackground); }
-    button.secondary { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
-    button.secondary:hover { background: var(--vscode-button-secondaryHoverBackground); }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
-    .badge-error { background: var(--vscode-errorForeground); color: #fff; }
-    .badge-warn { background: var(--vscode-editorWarning-foreground); color: #fff; }
-    .badge-ok { background: var(--vscode-testing-iconPassed); color: #fff; }
-    .empty { color: var(--vscode-descriptionForeground); font-style: italic; }
-    .actions-cell { white-space: nowrap; }
-    ul { padding-left: 20px; }
-    li { margin: 5px 0; }
+    button.secondary, .tabs button { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
+    button.secondary:hover, .tabs button:hover { background: var(--vscode-button-secondaryHoverBackground); }
+    button.active { outline: 1px solid var(--vscode-focusBorder); background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
+    .toolbar, .tabs, .export-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 12px; }
+    .card { border: 1px solid var(--vscode-panel-border); border-radius: 6px; padding: 12px; min-width: 0; }
+    .card span { display: block; color: var(--vscode-descriptionForeground); margin-bottom: 4px; }
+    .card strong { display: block; font-size: 22px; }
+    .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 16px 0; }
+    label { display: grid; gap: 5px; font-weight: 600; }
+    input, select { width: 100%; min-width: 0; padding: 7px 8px; border: 1px solid var(--vscode-input-border); background: var(--vscode-input-background); color: var(--vscode-input-foreground); border-radius: 3px; }
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; min-width: 760px; }
+    th, td { border-bottom: 1px solid var(--vscode-panel-border); padding: 8px; text-align: left; vertical-align: top; }
+    th { background: var(--vscode-sideBar-background); font-weight: 600; }
+    tr.clickable { cursor: pointer; }
+    tr.clickable:hover { background: var(--vscode-list-hoverBackground); }
+    .badge { display: inline-block; border-radius: 10px; padding: 2px 7px; font-size: 12px; font-weight: 600; }
+    .error { color: var(--vscode-errorForeground); }
+    .warning { color: var(--vscode-editorWarning-foreground); }
+    .info { color: var(--vscode-descriptionForeground); }
+    .empty { border: 1px dashed var(--vscode-panel-border); border-radius: 6px; padding: 20px; color: var(--vscode-descriptionForeground); }
+    .status { color: var(--vscode-descriptionForeground); min-height: 18px; }
+    [hidden] { display: none !important; }
   </style>
 </head>
 <body>
   <header>
-    <h1>${escapeHtml(report.title)}</h1>
-    <p>${escapeHtml(result.rootPath)} - ${escapeHtml(new Date(result.scannedAt).toLocaleString())}</p>
+    <div>
+      <h1>i18ntk Workbench Report</h1>
+      <p>${escapeHtml(maskProjectPath(report.projectRoot))} - ${escapeHtml(new Date(report.generatedAt).toLocaleString())}</p>
+    </div>
     <div class="toolbar">
-      <button data-command="refresh">Refresh Scan</button>
-      <button data-command="validateLocales" class="secondary">Validate Locales</button>
-      <button data-command="analyzeUsage" class="secondary">Analyze Usage</button>
-      <button data-command="autoTranslate" class="secondary">Auto Translate Missing</button>
-      <button data-command="addMissingKey" class="secondary">Add Key</button>
-      <button data-command="openSettings" class="secondary">Settings</button>
-      <button data-command="exportMarkdown" class="secondary">Copy Markdown</button>
-      <button data-command="saveReport" class="secondary">Save Report</button>
+      <button data-action="refresh">Refresh</button>
+      <button class="secondary" data-export="json">Export JSON</button>
+      <button class="secondary" data-export="markdown">Export Markdown</button>
+      <button class="secondary" data-export="html">Export HTML</button>
     </div>
   </header>
-  <section class="grid">
-    ${metric('Source Locale', result.sourceLocale, 'ok')}
-    ${metric('Locales', String(result.locales.length), 'ok')}
-    ${metric('Total Keys', String(result.totalKeys), 'ok')}
-    ${metric('Health Score', `${result.healthScore}%`, result.healthScore >= 80 ? 'ok' : result.healthScore >= 50 ? 'warn' : 'error')}
-    ${metric('Open Issues', String(issueCount), issueCount === 0 ? 'ok' : issueCount < 10 ? 'warn' : 'error')}
+
+  <section class="cards">
+    ${card('Total Keys', String(report.summary.totalKeys))}
+    ${card('Locales', String(report.summary.localeCount))}
+    ${card('Avg Complete', `${report.summary.averageCompletenessPct}%`)}
+    ${card('Total Issues', String(report.summary.issueCount))}
   </section>
-  <div class="summary">
-    Use this report to move from diagnosis to action: validate before release, add missing keys, open affected files, and run Auto Translate for target locale files when the local i18ntk CLI is available.
-  </div>
-  <section class="issue-tools">
-    <label for="issueFilter">Find issues<input id="issueFilter" type="search" placeholder="Filter by key, locale, file, or issue type"></label>
-    <div id="status" class="status" aria-live="polite"></div>
+
+  <nav class="tabs" aria-label="Report sections">
+    ${ISSUE_TABS.map((tab, index) => `<button class="${index === 0 ? 'active' : ''}" data-tab="${escapeAttr(tab.id)}">${escapeHtml(tab.label)}</button>`).join('')}
+  </nav>
+
+  <section id="tab-overview" data-panel="overview">
+    <h2>Translation Completeness</h2>
+    ${completenessTable(report)}
   </section>
-  ${table('Missing Keys', ['Locale', 'Key', 'Source File', 'Actions'], result.missingKeys.slice(0, 200).map((item) => [item.locale, item.key, item.sourceFilePath || '-', actions(item.sourceFilePath, item.key, true, `Missing key ${item.key} in ${item.locale}`)]), result.missingKeys.length)}
-  ${table('Placeholder Mismatches', ['Locale', 'Key', 'Missing', 'Extra', 'File', 'Actions'], result.placeholderMismatches.slice(0, 200).map((item) => [item.locale, item.key, item.missing.join(', '), item.extra.join(', '), item.filePath || '-', actions(item.filePath, undefined, false, `Placeholder mismatch ${item.key} in ${item.locale}`)]), result.placeholderMismatches.length)}
-  ${table('Unused Keys', ['Key', 'Confidence', 'File', 'Actions'], result.unusedKeys.slice(0, 200).map((item) => [item.key, `${Math.round(item.confidence * 100)}%`, item.filePath || '-', actions(item.filePath, undefined, false, `Unused key ${item.key}`)]), result.unusedKeys.length)}
-  ${table('Invalid Key Names', ['Key', 'Expected Style', 'File', 'Actions'], result.invalidKeyNames.slice(0, 200).map((item) => [item.key, item.expectedStyle, item.filePath || '-', actions(item.filePath, undefined, false, `Invalid key name ${item.key}; expected ${item.expectedStyle}`)]), result.invalidKeyNames.length)}
-  ${table('Risky Content', ['Locale', 'Key', 'Issue', 'File', 'Actions'], result.riskyContent.slice(0, 200).map((item) => [item.locale, item.key, item.message, item.filePath || '-', actions(item.filePath, undefined, false, `Risky content ${item.key} in ${item.locale}: ${item.message}`)]), result.riskyContent.length)}
-  ${table('Expansion Risks', ['Locale', 'Key', 'Expansion', 'File', 'Actions'], result.expansionRisks.slice(0, 200).map((item) => [item.locale, item.key, `+${item.expansionPercent}% (${item.sourceLength} -> ${item.targetLength})`, item.filePath || '-', actions(item.filePath, undefined, false, `Expansion risk ${item.key} in ${item.locale}: +${item.expansionPercent}%`)]), result.expansionRisks.length)}
-  ${table('Auto Translate Residuals', ['Locale', 'Key', 'Current Value', 'File', 'Actions'], residuals.slice(0, 200).map((item) => [item.locale, item.key, item.value, item.filePath || '-', actions(item.filePath, item.key, false, `Auto Translate residual ${item.key} in ${item.locale}`, true)]), residuals.length)}
-  <h2>Suggested Next Actions</h2>
-  <ul>
-    <li>Add missing keys for target locales.</li>
-    <li>Fix placeholder mismatches before release.</li>
-    <li>Review unused keys before deletion.</li>
-    <li>Address risky content warnings.</li>
-    <li>Test expansion risks in constrained layouts.</li>
-    <li>Review invalid key names against configured key style.</li>
-    <li>Retry Auto Translate residuals with only-missing mode, or protect keys that should stay unchanged.</li>
-  </ul>
+
+  ${ISSUE_TABS.filter(tab => tab.type).map(tab => issuePanel(tab.id, tab.label, report.issues.filter(issue => issue.type === tab.type))).join('')}
+
+  <section id="tab-exports" data-panel="exports" hidden>
+    <h2>Exports</h2>
+    <p>Generate local reports from the main i18ntk package. Existing exported paths are shown when this dashboard was opened from an export run.</p>
+    <div class="export-actions">
+      <button data-export="json">Export JSON</button>
+      <button data-export="markdown">Export Markdown</button>
+      <button data-export="html">Export HTML</button>
+    </div>
+    ${exportsList(report)}
+  </section>
+
+  <template id="filters-template">
+    <div class="filters">
+      <label>Search<input id="filter-search" type="search" placeholder="Key, file, or message"></label>
+      <label>Type<select id="filter-type"><option value="">All</option>${options(unique(report.issues.map(issue => issue.type)))}</select></label>
+      <label>Severity<select id="filter-severity"><option value="">All</option>${options(unique(report.issues.map(issue => issue.severity)))}</select></label>
+      <label>Locale<select id="filter-locale"><option value="">All</option>${options(unique(report.issues.map(issue => issue.locale).filter(Boolean) as string[]))}</select></label>
+      <label>Min confidence<input id="filter-confidence" type="number" min="0" max="100" step="5" placeholder="0-100"></label>
+    </div>
+    <div id="filter-status" class="status" aria-live="polite"></div>
+  </template>
+
   <script nonce="${escapeAttr(nonce)}">
-    const vsc = acquireVsCodeApi();
+    const vscode = acquireVsCodeApi();
+    const report = ${reportJson};
+    const filtersTemplate = document.getElementById('filters-template');
+    for (const panel of document.querySelectorAll('[data-issue-panel]')) {
+      panel.prepend(filtersTemplate.content.cloneNode(true));
+    }
+
     document.addEventListener('click', (event) => {
-      const button = event.target.closest('button[data-command]');
-      if (!button) return;
-      const command = button.dataset.command;
-      const message = { command };
-      if (button.dataset.filePath) message.filePath = button.dataset.filePath;
-      if (button.dataset.key) message.key = button.dataset.key;
-      if (button.dataset.issueText) message.issueText = button.dataset.issueText;
-      vsc.postMessage(message);
+      const target = event.target.closest('button, tr[data-issue-id]');
+      if (!target) return;
+      if (target.dataset.tab) {
+        for (const button of document.querySelectorAll('[data-tab]')) button.classList.toggle('active', button === target);
+        for (const panel of document.querySelectorAll('[data-panel]')) panel.hidden = panel.dataset.panel !== target.dataset.tab;
+      } else if (target.dataset.action === 'refresh') {
+        vscode.postMessage({ type: 'refreshReport' });
+      } else if (target.dataset.export) {
+        vscode.postMessage({ type: 'exportReport', format: target.dataset.export });
+      } else if (target.dataset.issueId) {
+        vscode.postMessage({ type: 'openIssue', issueId: target.dataset.issueId });
+      }
     });
-    const filter = document.getElementById('issueFilter');
-    const status = document.getElementById('status');
-    filter.addEventListener('input', () => {
-      const query = filter.value.trim().toLowerCase();
+
+    document.addEventListener('input', applyFilters);
+    document.addEventListener('change', applyFilters);
+
+    function applyFilters(event) {
+      const panel = event.target.closest('[data-issue-panel]');
+      if (!panel) return;
+      const q = panel.querySelector('#filter-search').value.trim().toLowerCase();
+      const type = panel.querySelector('#filter-type').value;
+      const severity = panel.querySelector('#filter-severity').value;
+      const locale = panel.querySelector('#filter-locale').value;
+      const minConfidenceRaw = panel.querySelector('#filter-confidence').value;
+      const minConfidence = minConfidenceRaw ? Number(minConfidenceRaw) / 100 : 0;
       let visible = 0;
-      for (const row of document.querySelectorAll('tr[data-issue-row]')) {
-        const show = !query || row.textContent.toLowerCase().includes(query);
+      for (const row of panel.querySelectorAll('tr[data-issue-id]')) {
+        const issue = report.issues.find(item => item.id === row.dataset.issueId);
+        const confidence = typeof issue.confidence === 'number' ? issue.confidence : 1;
+        const haystack = row.textContent.toLowerCase();
+        const show = (!q || haystack.includes(q)) &&
+          (!type || issue.type === type) &&
+          (!severity || issue.severity === severity) &&
+          (!locale || issue.locale === locale) &&
+          confidence >= minConfidence;
         row.hidden = !show;
         if (show) visible += 1;
       }
-      status.textContent = query ? visible + ' matching issue' + (visible === 1 ? '' : 's') : '';
-    });
+      const status = panel.querySelector('#filter-status');
+      if (status) status.textContent = q || type || severity || locale || minConfidenceRaw ? visible + ' matching issue' + (visible === 1 ? '' : 's') : '';
+    }
   </script>
 </body>
 </html>`;
 }
 
-function metric(label: string, value: string, variant: 'ok' | 'warn' | 'error'): string {
-  const cls = variant === 'error' ? ' metric error' : variant === 'warn' ? ' metric warn' : 'metric';
-  return `<div class="${cls}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
+function card(label: string, value: string): string {
+  return `<div class="card"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
 }
 
-function table(title: string, headers: string[], rows: string[][], total: number): string {
-  const shown = rows.length;
-  const more = total > shown ? ` <span style="color:var(--vscode-descriptionForeground);">(showing ${shown} of ${total})</span>` : '';
-  const body = rows.length
-    ? rows.map((row) => `<tr data-issue-row="true">${row.map((cell, index) => `<td${headers[index] === 'Actions' ? ' class="actions-cell"' : ''}>${headers[index] === 'Actions' ? cell : escapeHtml(cell)}</td>`).join('')}</tr>`).join('')
-    : `<tr><td colspan="${headers.length}" class="empty">None</td></tr>`;
-  return `<h2>${escapeHtml(title)}${more}</h2><div class="table-wrap"><table><thead><tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div>`;
+function completenessTable(report: I18ntkReport): string {
+  if (report.locales.length === 0) return `<div class="empty">No locale data found.</div>`;
+  return `<div class="table-wrap"><table><thead><tr><th>Locale</th><th>Translated</th><th>Missing</th><th>Complete</th><th>Placeholders</th><th>Untranslated</th><th>Expansion</th></tr></thead><tbody>${report.locales.map(locale => `<tr><td>${escapeHtml(locale.locale)}</td><td>${locale.translatedKeys}/${locale.totalKeys}</td><td>${locale.missingKeys}</td><td>${locale.completenessPct}%</td><td>${locale.placeholderMismatchCount}</td><td>${locale.likelyUntranslatedCount}</td><td>${locale.expansionRiskCount}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
-function actions(filePath?: string, key?: string, canAddKey = false, issueText?: string, canProtectKey = false): string {
-  const buttons: string[] = [];
-  if (filePath) {
-    buttons.push(`<button class="secondary" data-command="openFile" data-file-path="${escapeAttr(filePath)}">Open File</button>`);
-  }
-  if (issueText) {
-    buttons.push(`<button class="secondary" data-command="copyIssue" data-issue-text="${escapeAttr(issueText)}">Copy Issue</button>`);
-  }
-  if (canAddKey && key) {
-    buttons.push(`<button class="secondary" data-command="addMissingKey" data-key="${escapeAttr(key)}">Add Key</button>`);
-  }
-  if (canProtectKey && key) {
-    buttons.push(`<button class="secondary" data-command="addAutoTranslatePlaceholder" data-key="${escapeAttr(key)}">Protect Key</button>`);
-  }
-  return buttons.length ? buttons.join(' ') : '<span class="empty">No action</span>';
+function issuePanel(id: string, label: string, issues: I18ntkIssue[]): string {
+  return `<section id="tab-${escapeAttr(id)}" data-panel="${escapeAttr(id)}" data-issue-panel="${escapeAttr(id)}" hidden>
+    <h2>${escapeHtml(label)}</h2>
+    ${issues.length === 0 ? `<div class="empty">No ${escapeHtml(label.toLowerCase())} found.</div>` : issueTable(issues)}
+  </section>`;
+}
+
+function issueTable(issues: I18ntkIssue[]): string {
+  return `<div class="table-wrap"><table><thead><tr><th>Severity</th><th>Locale</th><th>Key</th><th>Confidence</th><th>Message</th><th>File</th></tr></thead><tbody>${issues.map(issue => `<tr class="${issue.file ? 'clickable' : ''}" data-issue-id="${escapeAttr(issue.id)}"><td class="${escapeAttr(issue.severity)}">${escapeHtml(issue.severity)}</td><td>${escapeHtml(issue.locale || '')}</td><td>${escapeHtml(issue.key || '')}</td><td>${typeof issue.confidence === 'number' ? `${Math.round(issue.confidence * 100)}%` : ''}</td><td>${escapeHtml(issue.message)}${issue.suggestion ? `<br><span class="info">${escapeHtml(issue.suggestion)}</span>` : ''}</td><td>${escapeHtml(formatFile(issue))}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function exportsList(report: I18ntkReport): string {
+  const entries = Object.entries(report.exports || {});
+  if (entries.length === 0) return `<div class="empty">No exports have been generated for this report yet.</div>`;
+  return `<ul>${entries.map(([format, file]) => `<li>${escapeHtml(format)}: ${escapeHtml(file || '')}</li>`).join('')}</ul>`;
+}
+
+function formatFile(issue: I18ntkIssue): string {
+  if (!issue.file) return '';
+  return `${issue.file}${issue.line ? `:${issue.line}` : ''}`;
+}
+
+function options(values: string[]): string {
+  return values.map(value => `<option value="${escapeAttr(value)}">${escapeHtml(value)}</option>`).join('');
+}
+
+function unique(values: string[]): string[] {
+  return [...new Set(values)].sort();
+}
+
+function maskProjectPath(projectRoot: string): string {
+  const parts = projectRoot.split(/[\\/]/).filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : projectRoot;
+}
+
+function escapeScriptJson(value: unknown): string {
+  return JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, (char) => ({
+    '<': '\\u003c',
+    '>': '\\u003e',
+    '&': '\\u0026',
+    '\u2028': '\\u2028',
+    '\u2029': '\\u2029'
+  }[char] ?? char));
 }
 
 export function escapeHtml(value: string): string {
