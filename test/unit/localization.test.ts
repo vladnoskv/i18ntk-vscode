@@ -40,6 +40,15 @@ test('Workbench localization can switch extension UI language', () => {
   assert.equal(t('workbench.titles.scanProgress'), 'Analyse de l’espace de travail avec i18ntk Workbench');
 });
 
+test('Workbench localization auto follows VS Code display language when available', () => {
+  setExtensionLanguage('auto', 'de-DE');
+  assert.equal(getExtensionLanguage(), 'de');
+  assert.equal(t('workbench.messages.extensionLanguageUpdated'), 'i18ntk Workbench-Sprache aktualisiert.');
+
+  setExtensionLanguage('auto', 'ru');
+  assert.equal(getExtensionLanguage(), 'en');
+});
+
 test('Workbench localization exposes supported extension UI languages', () => {
   assert.deepEqual(getAvailableExtensionLanguages().sort(), ['de', 'en', 'es', 'fr']);
 });

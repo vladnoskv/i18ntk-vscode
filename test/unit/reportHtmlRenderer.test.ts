@@ -95,5 +95,9 @@ test('renderReportHtml exposes dashboard tabs, filters, issue opening, refresh, 
   assert.equal(html.includes('data-action="refresh"'), true);
   assert.equal(html.includes('data-issue-id="missing_key-1"'), true);
   assert.equal(html.includes('filter-confidence'), true);
+  assert.equal(html.includes('data-bulk-action="ignore"'), true);
+  assert.equal(html.includes('data-menu-action="ignore"'), true);
+  assert.equal(html.includes('📄 src/App.tsx:12 →'), true);
+  assert.equal(html.includes("vscode.postMessage({ type: 'ignoreIssues'"), true);
   assert.equal(html.includes("vscode.postMessage({ type: 'refreshReport' })"), true);
 });

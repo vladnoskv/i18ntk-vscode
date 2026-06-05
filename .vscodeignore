@@ -4,6 +4,7 @@ node_modules/**
 src/**
 test/**
 out/test/**
+tmp-report-out/**
 **/*.map
 tsconfig.json
 package-lock.json

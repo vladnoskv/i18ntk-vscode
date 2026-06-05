@@ -6,7 +6,7 @@ export class I18nStatusBarItem implements vscode.Disposable {
   constructor() {
     this.item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     this.item.name = 'i18ntk Status';
-    this.item.tooltip = 'i18ntk Translation Coverage';
+    this.item.tooltip = this.idleTooltip();
     this.item.command = 'i18ntk.openReport';
     this.item.text = '$(globe) i18ntk: waiting...';
     this.item.show();
@@ -28,6 +28,7 @@ export class I18nStatusBarItem implements vscode.Disposable {
       } else {
         this.item.text = '$(globe) i18ntk: idle';
         this.item.backgroundColor = undefined;
+        this.item.tooltip = this.idleTooltip();
         this.item.show();
       }
       return;
@@ -63,21 +64,34 @@ export class I18nStatusBarItem implements vscode.Disposable {
       this.item.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
     }
 
-    this.item.tooltip = [
-      `i18ntk Translation Coverage`,
-      ``,
-      `Locales: ${result.locales.join(', ')}`,
-      `Total Keys: ${result.totalKeys}`,
-      `Missing: ${missingCount}`,
-      `Placeholder Mismatches: ${result.placeholderMismatches.length}`,
-      result.unusedKeys ? `Unused: ${result.unusedKeys.length}` : '',
-      `Health: ${health}%`,
-      ``,
-      `Click to open summary report`
-    ].filter(Boolean).join('\n');
+    const tooltip = new vscode.MarkdownString(undefined, true);
+    tooltip.isTrusted = true;
+    tooltip.supportThemeIcons = true;
+    tooltip.appendMarkdown(`**$(globe) i18ntk Translation Coverage**\n\n`);
+    tooltip.appendMarkdown(`| Metric | Value |\n|---|---:|\n`);
+    tooltip.appendMarkdown(`| Locales | ${escapeMarkdown(result.locales.join(', ') || '-')} |\n`);
+    tooltip.appendMarkdown(`| Total keys | ${result.totalKeys} |\n`);
+    tooltip.appendMarkdown(`| Missing | ${missingCount} |\n`);
+    tooltip.appendMarkdown(`| Placeholder mismatches | ${result.placeholderMismatches.length} |\n`);
+    tooltip.appendMarkdown(`| Unused | ${result.unusedKeys?.length ?? 0} |\n`);
+    tooltip.appendMarkdown(`| Health | ${health}% |\n\n`);
+    tooltip.appendMarkdown(`[Open report](command:i18ntk.openReport) · [Scan workspace](command:i18ntk.scanWorkspace) · [Settings](command:i18ntk.openSettings)`);
+    this.item.tooltip = tooltip;
   }
 
   dispose(): void {
     this.item.dispose();
   }
+
+  private idleTooltip(): vscode.MarkdownString {
+    const tooltip = new vscode.MarkdownString(undefined, true);
+    tooltip.isTrusted = true;
+    tooltip.supportThemeIcons = true;
+    tooltip.appendMarkdown(`**$(globe) i18ntk Workbench**\n\nNo scan data loaded.\n\n[Scan workspace](command:i18ntk.scanWorkspace) · [Settings](command:i18ntk.openSettings)`);
+    return tooltip;
+  }
+}
+
+function escapeMarkdown(value: string): string {
+  return value.replace(/[\\|`*_{}\[\]()#+\-.!]/g, '\\$&');
 }

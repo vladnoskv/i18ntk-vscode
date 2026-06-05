@@ -12,6 +12,15 @@ i18ntk Workbench gives i18n projects a focused VS Code control center: scan loca
 
 It is the full VS Code companion to the zero-dependency `i18ntk` npm package. Workbench owns the i18ntk Activity Bar sidebar; when i18ntk Lens is installed too, Lens stays inline-only with hovers, CodeLens, diagnostics, commands, and settings.
 
+## Latest in 1.2.2
+
+- **Shared Project Config**: Workbench reads project defaults from `.i18ntk-config` under `extensions.workbench`, while explicit VS Code settings still take precedence.
+- **Language Pack Fallback**: the extension follows the active VS Code display language when a shipped Workbench locale exists and falls back to English for unsupported languages.
+- **Report Improvements**: cleaner report spacing, better filters, multi-select ignore, right-click ignore, and improved handling for dynamic placeholders such as `{file}`, `{path}`, and `{command}`.
+- **Settings Navigation**: the Workbench settings webview now uses dedicated sections with left-side navigation for easier management.
+- **Walkthrough Fix**: Getting Started Markdown media now uses separate files without heading fragments, avoiding VS Code file-read errors during onboarding.
+- **Status Bar Polish**: the status bar hover now presents scan status, health, issue counts, and actions in a cleaner VS Code-style summary.
+
 ## Latest in 1.2.0
 
 - **Persistent Status Bar**: always-visible locale stats with color-coded health score (green ≥95%, yellow ≥75%, red <75%). Toggle via `i18ntk.showStatusBar`.
@@ -116,6 +125,7 @@ Requirements:
 - **Hover translations**: shows locale values for `t("key")`, `i18n.t(...)`, `translate(...)`, `$t(...)`, and configured custom wrappers.
 - **Quick fixes**: add missing keys, open any i18ntk diagnostic key in locale files, or add Auto Translate residual keys to protection from the editor or Problems panel.
 - **Report dashboard**: CLI-backed completeness, missing key, unused key, placeholder, untranslated, expansion, and hardcoded text reporting with filters, file opening, refresh, and JSON/Markdown/HTML exports.
+- **Shared config**: reads and writes Workbench-owned defaults under `.i18ntk-config` -> `extensions.workbench`.
 - **CLI-backed Auto Translate**: runs local `i18ntk-translate` with non-interactive, placeholder-safe defaults.
 - **Local-first behavior**: no telemetry; provider network calls happen only when you explicitly run Auto Translate.
 

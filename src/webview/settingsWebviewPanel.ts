@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import { detectLocaleDirectory, resolveConfiguredLocaleDirectory } from '../config/localeDiscovery';
+import { getConfigValue, getSharedWorkbenchSettings, loadSharedConfig, saveSharedWorkbenchSettings } from '../config/sharedConfig';
+import { setExtensionLanguage, t } from '../i18ntk/localization';
 
 export class WorkbenchSettingsPanel {
   private static panel: vscode.WebviewPanel | undefined;
@@ -27,13 +29,14 @@ export class WorkbenchSettingsPanel {
   }
 
   private static getLoadingHtml(): string {
-    return `<!DOCTYPE html><html lang="en"><body>Loading i18ntk Workbench settings...</body></html>`;
+    return `<!DOCTYPE html><html lang="en"><body>${escapeHtml(t('workbench.settings.loading', {}, 'Loading i18ntk Workbench settings...'))}</body></html>`;
   }
 
   private static async getHtml(): Promise<string> {
     const config = vscode.workspace.getConfiguration('i18ntk');
     const folder = vscode.workspace.workspaceFolders?.[0];
-    const configuredLocaleDirectory = config.get('localeDirectory', '');
+    const shared = getSharedWorkbenchSettings(folder ? await loadSharedConfig(folder.uri.fsPath) : undefined);
+    const configuredLocaleDirectory = getConfigValue('i18ntk', 'localeDirectory', shared.localeDirectory, '');
     const discovery = folder
       ? configuredLocaleDirectory
         ? await resolveConfiguredLocaleDirectory(folder.uri.fsPath, configuredLocaleDirectory)
@@ -42,33 +45,33 @@ export class WorkbenchSettingsPanel {
     const nonce = createNonce();
     const model = {
       localeDirectory: configuredLocaleDirectory,
-      sourceLocale: config.get('sourceLocale', 'en'),
-      extensionLanguage: config.get('extensionLanguage', 'auto'),
-      keyStyle: config.get('keyStyle', 'dot'),
-      autoScanOnSave: config.get('autoScanOnSave', false),
-      autoScanOnFileChange: config.get('autoScanOnFileChange', false),
-      scanOnStartup: config.get('scanOnStartup', false),
-      runCliValidationOnScan: config.get('runCliValidationOnScan', false),
-      showInlineDiagnostics: config.get('showInlineDiagnostics', true),
-      showHoverTranslations: config.get('showHoverTranslations', true),
-      highlightLocaleKeys: config.get('highlightLocaleKeys', true),
+      sourceLocale: getConfigValue('i18ntk', 'sourceLocale', shared.sourceLocale, 'en'),
+      extensionLanguage: getConfigValue('i18ntk', 'extensionLanguage', shared.extensionLanguage, 'auto'),
+      keyStyle: getConfigValue('i18ntk', 'keyStyle', shared.keyStyle, 'dot'),
+      autoScanOnSave: getConfigValue('i18ntk', 'autoScanOnSave', shared.autoScanOnSave, false),
+      autoScanOnFileChange: getConfigValue('i18ntk', 'autoScanOnFileChange', shared.autoScanOnFileChange, false),
+      scanOnStartup: getConfigValue('i18ntk', 'scanOnStartup', shared.scanOnStartup, false),
+      runCliValidationOnScan: getConfigValue('i18ntk', 'runCliValidationOnScan', shared.runCliValidationOnScan, false),
+      showInlineDiagnostics: getConfigValue('i18ntk', 'showInlineDiagnostics', shared.showInlineDiagnostics, true),
+      showHoverTranslations: getConfigValue('i18ntk', 'showHoverTranslations', shared.showHoverTranslations, true),
+      highlightLocaleKeys: getConfigValue('i18ntk', 'highlightLocaleKeys', shared.highlightLocaleKeys, true),
       diagnosticSeverities: {
         ...DEFAULT_DIAGNOSTIC_SEVERITIES,
-        ...(config.get('diagnosticSeverities', {}) as Record<string, string>)
+        ...getConfigValue('i18ntk', 'diagnosticSeverities', shared.diagnosticSeverities, {} as Record<string, string>)
       },
-      ignoredDiagnostics: config.get('ignoredDiagnostics', []) as string[],
-      reportFormat: config.get('reportFormat', 'webview'),
-      maxScanFiles: config.get('maxScanFiles', 2000),
-      exclude: config.get('exclude', ['node_modules', '.next', 'dist', 'build', 'coverage']) as string[],
-      customWrappers: config.get('customWrappers', []) as string[],
-      autoTranslateProvider: config.get('autoTranslateProvider', 'google'),
-      autoTranslateTargets: config.get('autoTranslateTargets', []) as string[],
-      autoTranslateMode: config.get('autoTranslateMode', 'onlyMissing'),
-      showStatusBar: config.get('showStatusBar', true),
-      enableKeyCompletion: config.get('enableKeyCompletion', true),
-      enableFileBadges: config.get('enableFileBadges', true),
-      enableSemanticTokens: config.get('enableSemanticTokens', true),
-      enableDocumentLinks: config.get('enableDocumentLinks', true)
+      ignoredDiagnostics: getConfigValue('i18ntk', 'ignoredDiagnostics', shared.ignoredDiagnostics, []),
+      reportFormat: getConfigValue('i18ntk', 'reportFormat', shared.reportFormat, 'webview'),
+      maxScanFiles: getConfigValue('i18ntk', 'maxScanFiles', shared.maxScanFiles, 2000),
+      exclude: getConfigValue('i18ntk', 'exclude', shared.exclude, ['node_modules', '.next', 'dist', 'build', 'coverage']) as string[],
+      customWrappers: getConfigValue('i18ntk', 'customWrappers', shared.customWrappers, []) as string[],
+      autoTranslateProvider: getConfigValue('i18ntk', 'autoTranslateProvider', shared.autoTranslateProvider, 'google'),
+      autoTranslateTargets: getConfigValue('i18ntk', 'autoTranslateTargets', shared.autoTranslateTargets, []) as string[],
+      autoTranslateMode: getConfigValue('i18ntk', 'autoTranslateMode', shared.autoTranslateMode, 'onlyMissing'),
+      showStatusBar: getConfigValue('i18ntk', 'showStatusBar', shared.showStatusBar, true),
+      enableKeyCompletion: getConfigValue('i18ntk', 'enableKeyCompletion', shared.enableKeyCompletion, true),
+      enableFileBadges: getConfigValue('i18ntk', 'enableFileBadges', shared.enableFileBadges, true),
+      enableSemanticTokens: getConfigValue('i18ntk', 'enableSemanticTokens', shared.enableSemanticTokens, true),
+      enableDocumentLinks: getConfigValue('i18ntk', 'enableDocumentLinks', shared.enableDocumentLinks, true)
     };
     const setupSummary = discovery
       ? {
@@ -92,13 +95,22 @@ export class WorkbenchSettingsPanel {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>i18ntk Workbench Settings</title>
   <style>
-    body { box-sizing: border-box; margin: 0; padding: 20px; font-family: var(--vscode-font-family); color: var(--vscode-foreground); background: var(--vscode-editor-background); }
+    body { box-sizing: border-box; margin: 0; font-family: var(--vscode-font-family); color: var(--vscode-foreground); background: var(--vscode-editor-background); }
     *, *::before, *::after { box-sizing: inherit; }
+    .layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 100vh; }
+    .side-nav { position: sticky; top: 0; height: 100vh; padding: 16px 12px; border-right: 1px solid var(--vscode-panel-border); background: var(--vscode-sideBar-background); overflow-y: auto; }
+    .side-nav strong { display: block; margin: 0 8px 12px; font-size: 13px; color: var(--vscode-descriptionForeground); text-transform: uppercase; letter-spacing: .04em; }
+    .side-nav button { width: 100%; margin-bottom: 4px; text-align: left; background: transparent; color: var(--vscode-foreground); border-radius: 5px; }
+    .side-nav button.active, .side-nav button:hover { background: var(--vscode-list-hoverBackground); }
+    .content { min-width: 0; padding: 22px 24px 96px; max-width: 1320px; }
     header { border-bottom: 1px solid var(--vscode-panel-border); margin-bottom: 16px; padding-bottom: 12px; }
     h1 { font-size: 22px; margin: 0 0 6px; }
-    h2 { font-size: 15px; margin: 24px 0 10px; }
+    h2 { font-size: 16px; margin: 0 0 12px; }
     p, .hint { color: var(--vscode-descriptionForeground); line-height: 1.45; }
     p { margin: 0; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .page + .page { margin-top: 0; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
     .field { margin-bottom: 14px; }
     label { display: block; font-weight: 600; margin-bottom: 5px; }
@@ -112,19 +124,38 @@ export class WorkbenchSettingsPanel {
     button:hover { background: var(--vscode-button-hoverBackground); }
     button.secondary { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
     button.secondary:hover { background: var(--vscode-button-secondaryHoverBackground); }
-    .setup { border: 1px solid var(--vscode-panel-border); border-radius: 4px; padding: 12px; margin-bottom: 18px; background: var(--vscode-sideBar-background); }
+    .panel { border: 1px solid var(--vscode-panel-border); border-radius: 6px; padding: 14px; margin-bottom: 16px; background: var(--vscode-sideBar-background); }
+    .setup { border: 1px solid var(--vscode-panel-border); border-radius: 6px; padding: 12px; margin-bottom: 18px; background: var(--vscode-sideBar-background); }
     .setup strong { display: block; margin-bottom: 4px; }
     .setup code { font-family: var(--vscode-editor-font-family); }
-    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .sticky-actions { position: fixed; left: 220px; right: 0; bottom: 0; z-index: 20; padding: 10px 24px; border-top: 1px solid var(--vscode-panel-border); background: var(--vscode-editor-background); }
     .status { margin-top: 14px; padding: 8px; border-radius: 3px; display: none; }
     .status.ok { display: block; background: var(--vscode-testing-iconPassed); color: #fff; }
+    @media (max-width: 760px) {
+      .layout { grid-template-columns: 1fr; }
+      .side-nav { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--vscode-panel-border); }
+      .sticky-actions { left: 0; }
+    }
   </style>
 </head>
 <body>
+<div class="layout">
+  <nav class="side-nav" aria-label="Settings sections">
+    <strong>i18ntk</strong>
+    <button class="active" data-page-button="workspace">Workspace</button>
+    <button data-page-button="scanning">Scanning</button>
+    <button data-page-button="feedback">Editor Feedback</button>
+    <button data-page-button="diagnostics">Diagnostics</button>
+    <button data-page-button="translate">Auto Translate</button>
+    <button data-page-button="advanced">Advanced</button>
+  </nav>
+  <main class="content">
   <header>
-    <h1>i18ntk Workbench Settings</h1>
-    <p>Configure scanning, diagnostics, report behavior, custom wrappers, and Auto Translate for this workspace.</p>
+    <h1>${escapeHtml(t('workbench.settings.title', {}, 'i18ntk Workbench Settings'))}</h1>
+    <p>${escapeHtml(t('workbench.settings.description', {}, 'Configure scanning, diagnostics, report behavior, custom wrappers, and Auto Translate for this workspace.'))}</p>
   </header>
+  <section class="page active" data-page="workspace">
   <section class="setup">
     <strong>${escapeHtml(setupSummary.status)}</strong>
     <p>Resolved locale directory: <code>${escapeHtml(setupSummary.resolved)}</code></p>
@@ -134,21 +165,30 @@ export class WorkbenchSettingsPanel {
       <button id="chooseLocale" class="secondary">Choose Locale Directory</button>
     </div>
   </section>
+  <section class="panel">
   <h2>Workspace</h2>
-  <section class="grid">
+  <div class="grid">
     ${textField('localeDirectory', 'Locale Directory', model.localeDirectory, 'Leave empty to auto-detect common locale folders.')}
     ${textField('sourceLocale', 'Source Locale', model.sourceLocale, 'Source/default locale code, such as en.')}
     ${selectField('extensionLanguage', 'Extension UI Language', model.extensionLanguage, ['auto', 'en', 'es', 'fr', 'de'], 'Use auto to follow VS Code when supported, or pick a fixed extension UI language.')}
     ${selectField('keyStyle', 'Key Style', model.keyStyle, ['dot', 'snake', 'camel', 'kebab', 'flat'], 'Used for invalid key name diagnostics.')}
     ${selectField('reportFormat', 'Report Format', model.reportFormat, ['webview', 'markdown'], 'Default report presentation for Workbench reports.')}
     ${numberField('maxScanFiles', 'Max Scan Files', model.maxScanFiles, 'Caps source scanning work for large repositories.')}
+  </div>
   </section>
+  </section>
+  <section class="page" data-page="scanning">
+  <section class="panel">
   <h2>Scan Scheduling</h2>
   <label><input type="checkbox" id="scanOnStartup" ${model.scanOnStartup ? 'checked' : ''}>Run a scan when Workbench starts</label>
   <label><input type="checkbox" id="autoScanOnSave" ${model.autoScanOnSave ? 'checked' : ''}>Auto-scan after editor saves</label>
   <label><input type="checkbox" id="autoScanOnFileChange" ${model.autoScanOnFileChange ? 'checked' : ''}>Auto-scan when locale or i18ntk config files change on disk</label>
   <label><input type="checkbox" id="runCliValidationOnScan" ${model.runCliValidationOnScan ? 'checked' : ''}>Also run CLI validation during scans</label>
   <div class="hint">Automatic scans are off by default to keep extension-host CPU and memory low. Use Save and Scan or the Scan Workspace command for manual scans.</div>
+  </section>
+  </section>
+  <section class="page" data-page="feedback">
+  <section class="panel">
   <h2>Editor Feedback</h2>
   <label><input type="checkbox" id="showInlineDiagnostics" ${model.showInlineDiagnostics ? 'checked' : ''}>Show inline diagnostics</label>
   <label><input type="checkbox" id="showHoverTranslations" ${model.showHoverTranslations ? 'checked' : ''}>Show hover translations</label>
@@ -159,6 +199,10 @@ export class WorkbenchSettingsPanel {
   <label><input type="checkbox" id="enableFileBadges" ${model.enableFileBadges ? 'checked' : ''}>Show Explorer file badges on locale JSON files</label>
   <label><input type="checkbox" id="enableSemanticTokens" ${model.enableSemanticTokens ? 'checked' : ''}>Highlight translation keys with semantic tokens</label>
   <label><input type="checkbox" id="enableDocumentLinks" ${model.enableDocumentLinks ? 'checked' : ''}>Enable Ctrl+Click navigation links to locale files</label>
+  </section>
+  </section>
+  <section class="page" data-page="diagnostics">
+  <section class="panel">
   <h2>Problem Diagnostics</h2>
   <section class="grid">
     ${DIAGNOSTIC_RULES.map((rule) => selectField(`severity-${rule.code}`, rule.label, model.diagnosticSeverities[rule.code] ?? DEFAULT_DIAGNOSTIC_SEVERITIES[rule.code], ['error', 'warning', 'off', 'ignore'], rule.hint)).join('')}
@@ -168,12 +212,19 @@ export class WorkbenchSettingsPanel {
   <div class="list-editor" id="ignoredDiagnosticsList">${model.ignoredDiagnostics.map((v) => row(v)).join('')}</div>
   <div class="hint">Right-click an i18ntk Problem and choose ignore to add entries here. Remove entries to show those diagnostics again.</div>
   <div class="actions"><button id="addIgnoredDiagnostic" class="secondary">Add Ignored Diagnostic</button></div>
+  </section>
+  </section>
+  <section class="page" data-page="translate">
+  <section class="panel">
   <h2>Auto Translate</h2>
   <section class="grid">
     ${selectField('autoTranslateProvider', 'Provider', model.autoTranslateProvider, ['google', 'deepl', 'libretranslate'], 'DeepL and LibreTranslate may require environment configuration in the CLI.')}
     ${selectField('autoTranslateMode', 'Mode', model.autoTranslateMode, ['onlyMissing', 'translateAll', 'dryRun'], 'Only missing keeps existing translations. Dry run previews without writing files.')}
     ${textField('autoTranslateTargets', 'Target Locales', model.autoTranslateTargets.join(', '), 'Comma-separated target locales, such as fr, de, es.')}
   </section>
+  </section>
+  <section class="page" data-page="advanced">
+  <section class="panel">
   <h2>Excluded Folders</h2>
   <div class="list-editor" id="excludeList">${model.exclude.map((v) => row(v)).join('')}</div>
   <div class="actions"><button id="addExclude" class="secondary">Add Folder</button></div>
@@ -181,13 +232,17 @@ export class WorkbenchSettingsPanel {
   <div class="list-editor" id="wrapperList">${model.customWrappers.map((v) => row(v)).join('')}</div>
   <div class="hint">Add wrapper names such as tx, __, or _t when your app uses custom translation functions.</div>
   <div class="actions"><button id="addWrapper" class="secondary">Add Wrapper</button></div>
-  <div class="actions">
+  </section>
+  </section>
+  <div class="actions sticky-actions">
     <button id="save">Save Settings</button>
     <button id="saveScan" class="secondary">Save and Scan</button>
     <button id="openNative" class="secondary">Open Native Settings</button>
     <button id="reset" class="secondary">Reset to Defaults</button>
   </div>
   <div id="status" class="status"></div>
+  </main>
+</div>
   <script nonce="${escapeAttr(nonce)}">
     const vsc = acquireVsCodeApi();
     function addRow(containerId) {
@@ -239,6 +294,12 @@ export class WorkbenchSettingsPanel {
     document.getElementById('addExclude').addEventListener('click', () => addRow('excludeList'));
     document.getElementById('addWrapper').addEventListener('click', () => addRow('wrapperList'));
     document.getElementById('addIgnoredDiagnostic').addEventListener('click', () => addRow('ignoredDiagnosticsList'));
+    document.addEventListener('click', (event) => {
+      const navButton = event.target.closest('[data-page-button]');
+      if (!navButton) return;
+      for (const button of document.querySelectorAll('[data-page-button]')) button.classList.toggle('active', button === navButton);
+      for (const page of document.querySelectorAll('[data-page]')) page.classList.toggle('active', page.dataset.page === navButton.dataset.pageButton);
+    });
     document.getElementById('detectLocale').addEventListener('click', () => vsc.postMessage({ command: 'detectLocaleDirectory' }));
     document.getElementById('chooseLocale').addEventListener('click', () => vsc.postMessage({ command: 'chooseLocaleDirectory' }));
     document.addEventListener('click', (event) => {
@@ -286,10 +347,16 @@ export class WorkbenchSettingsPanel {
     }
     if (message.command === 'save' || message.command === 'saveAndScan') {
       const data = message.data;
+      const rootPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      if (rootPath) {
+        await saveSharedWorkbenchSettings(rootPath, data);
+      }
       for (const key of SETTINGS_KEYS) {
         await config.update(key, data[key], vscode.ConfigurationTarget.Workspace);
       }
+      setExtensionLanguage(data.extensionLanguage, vscode.env.language);
       this.panel?.webview.postMessage({ command: 'saved' });
+      await this.render();
       if (message.command === 'saveAndScan') {
         await vscode.commands.executeCommand('i18ntk.scanWorkspace');
       }
@@ -333,6 +400,9 @@ const DEFAULT_DIAGNOSTIC_SEVERITIES: Record<string, string> = {
   'i18ntk.riskyContent': 'warning',
   'i18ntk.expansionRisk': 'off',
   'i18ntk.autoTranslateResidual': 'warning'
+  ,
+  'i18ntk.clientBoundary': 'warning',
+  'i18ntk.copyFormatter': 'warning'
 };
 
 const DIAGNOSTIC_RULES = [
@@ -342,7 +412,9 @@ const DIAGNOSTIC_RULES = [
   { code: 'i18ntk.unusedKey', label: 'Unused Keys', hint: 'Source-locale keys that do not appear in scanned source usage.' },
   { code: 'i18ntk.riskyContent', label: 'Risky Content', hint: 'Advisory checks for untranslated values, URLs, HTML, escapes, or long values.' },
   { code: 'i18ntk.expansionRisk', label: 'Expansion Risks', hint: 'Advisory checks for translated values much longer than source values.' },
-  { code: 'i18ntk.autoTranslateResidual', label: 'Auto Translate Residuals', hint: 'Keys left unresolved by Auto Translate after targeted retry.' }
+  { code: 'i18ntk.autoTranslateResidual', label: 'Auto Translate Residuals', hint: 'Keys left unresolved by Auto Translate after targeted retry.' },
+  { code: 'i18ntk.clientBoundary', label: 'Client Boundary Imports', hint: 'Locale JSON imports in client-boundary files.' },
+  { code: 'i18ntk.copyFormatter', label: 'Copy Formatter Wrappers', hint: 'Functions that format copy but do not call the translation runtime.' }
 ];
 
 function textField(id: string, label: string, value: string, hint: string): string {

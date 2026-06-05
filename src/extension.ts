@@ -27,9 +27,10 @@ import { LocaleHealthTreeProvider } from './tree/localeHealthTreeProvider';
 import { ReportWebviewPanel } from './webview/reportWebviewPanel';
 import { WorkbenchSettingsPanel } from './webview/settingsWebviewPanel';
 import { DiagnosticRuleSeverity } from './types';
+import { getConfigValue, getSharedWorkbenchSettings, loadSharedConfig } from './config/sharedConfig';
 
 export function activate(context: vscode.ExtensionContext): void {
-  setExtensionLanguage(vscode.workspace.getConfiguration('i18ntk').get('extensionLanguage', 'auto'));
+  void applyInitialSharedSettings();
   const outputChannel = vscode.window.createOutputChannel('i18ntk Workbench');
   const logger = new OutputChannelLogger(outputChannel);
   const scanner = new WorkspaceScanner(logger);
@@ -313,13 +314,13 @@ export function activate(context: vscode.ExtensionContext): void {
     await vscode.commands.executeCommand('vscode.openWith', uri, TranslationGridEditorProvider.viewType);
   }));
 
-  if (vscode.workspace.getConfiguration('i18ntk').get('scanOnStartup', false)) {
-    vscode.commands.executeCommand('i18ntk.scanWorkspace');
-  }
+  void runStartupScanIfEnabled();
 
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
-  context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(() => {
-    if (!vscode.workspace.getConfiguration('i18ntk').get('autoScanOnSave', false)) return;
+  context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(async () => {
+    const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const shared = getSharedWorkbenchSettings(root ? await loadSharedConfig(root) : undefined);
+    if (!getConfigValue('i18ntk', 'autoScanOnSave', shared.autoScanOnSave, false)) return;
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
       vscode.commands.executeCommand('i18ntk.scanWorkspace');
@@ -328,7 +329,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
     if (event.affectsConfiguration('i18ntk.extensionLanguage')) {
-      setExtensionLanguage(vscode.workspace.getConfiguration('i18ntk').get('extensionLanguage', 'auto'));
+      setExtensionLanguage(vscode.workspace.getConfiguration('i18ntk').get('extensionLanguage', 'auto'), vscode.env.language);
+      vscode.window.showInformationMessage(t('workbench.messages.extensionLanguageUpdated', {}, 'i18ntk Workbench language updated.'));
     }
     if (event.affectsConfiguration('i18ntk.diagnosticSeverities') || event.affectsConfiguration('i18ntk.ignoredDiagnostics')) {
       if (!isLensActive()) diagnostics.refresh();
@@ -402,6 +404,20 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.executeCommand('i18ntk.scanWorkspace');
   });
   context.subscriptions.push(configWatcher);
+}
+
+async function applyInitialSharedSettings(): Promise<void> {
+  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const shared = getSharedWorkbenchSettings(root ? await loadSharedConfig(root) : undefined);
+  setExtensionLanguage(getConfigValue('i18ntk', 'extensionLanguage', shared.extensionLanguage, 'auto'), vscode.env.language);
+}
+
+async function runStartupScanIfEnabled(): Promise<void> {
+  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const shared = getSharedWorkbenchSettings(root ? await loadSharedConfig(root) : undefined);
+  if (getConfigValue('i18ntk', 'scanOnStartup', shared.scanOnStartup, false)) {
+    await vscode.commands.executeCommand('i18ntk.scanWorkspace');
+  }
 }
 
 export function deactivate(): void {}

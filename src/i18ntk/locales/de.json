@@ -21,7 +21,8 @@
       "noLocaleFiles": "Keine Sprachdateien gefunden. Führe zuerst Arbeitsbereich scannen aus.",
       "noScanData": "Keine Scandaten verfügbar. Führe zuerst i18ntk: Arbeitsbereich scannen aus.",
       "diagnosticsRefreshed": "i18ntk-Diagnosen aus aktuellen Scandaten aktualisiert.",
-      "decorationsRebuilt": "i18ntk-Dekorationen aus aktuellen Scandaten neu aufgebaut."
+      "decorationsRebuilt": "i18ntk-Dekorationen aus aktuellen Scandaten neu aufgebaut.",
+      "extensionLanguageUpdated": "i18ntk Workbench-Sprache aktualisiert."
     },
     "titles": {
       "openTranslationKey": "Zu öffnender Übersetzungsschlüssel",

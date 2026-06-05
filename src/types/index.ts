@@ -221,6 +221,7 @@ export type I18nReport = I18ntkReport;
 export type WebviewToExtensionMessage =
   | { type: 'refreshReport' }
   | { type: 'openIssue'; issueId: string }
+  | { type: 'ignoreIssues'; issueIds: string[] }
   | { type: 'openFile'; file: string; line?: number; column?: number }
   | { type: 'exportReport'; format: 'json' | 'markdown' | 'html' };
 

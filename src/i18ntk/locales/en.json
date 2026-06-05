@@ -21,7 +21,8 @@
       "noLocaleFiles": "No locale files found. Run Scan Workspace first.",
       "noScanData": "No scan data available. Run i18ntk: Scan Workspace first.",
       "diagnosticsRefreshed": "i18ntk diagnostics refreshed from current scan data.",
-      "decorationsRebuilt": "i18ntk decorations rebuilt from current scan data."
+      "decorationsRebuilt": "i18ntk decorations rebuilt from current scan data.",
+      "extensionLanguageUpdated": "i18ntk Workbench language updated."
     },
     "titles": {
       "openTranslationKey": "Translation key to open",

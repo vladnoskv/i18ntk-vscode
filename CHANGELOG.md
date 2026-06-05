@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.2 - 2026-06-05
+
+- Fixed walkthrough Markdown media links so VS Code no longer tries to open files with heading fragments appended to the path.
+- Workbench now follows the active VS Code display language when a shipped locale bundle exists, with a clean English fallback for unsupported languages.
+- Fixed raw localization keys in notifications and webviews by routing Workbench UI strings through the extension localization runtime.
+- Added shared `.i18ntk-config` support under `extensions.workbench`; existing VS Code settings still take precedence.
+- Improved report filtering, spacing, issue actions, multi-select ignore, and right-click ignore flows.
+- Improved likely-untranslated reporting for placeholder-only and dynamic values such as `{file}`, `{path}`, and translated copy containing `{command}`.
+- Refined the status bar hover details and reorganized the settings webview with a left navigation layout.
+
 ## 1.1.3 - 2026-06-02
 
 - Fixed overlapping Workbench scans by reusing the in-flight scan instead of opening multiple concurrent progress notifications.

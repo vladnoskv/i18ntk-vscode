@@ -2,7 +2,7 @@
   "name": "i18ntk-workbench",
   "displayName": "i18ntk Workbench",
   "description": "VS Code workbench for i18ntk projects: setup, scanning, validation, usage reports, key management, and CLI-backed Auto Translate.",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "publisher": "VladNoskov",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -428,42 +428,67 @@
           {
             "id": "detectLocaleDirectory",
             "title": "Detect or Choose Your Locale Directory",
-            "description": "i18ntk needs to know where your locale JSON files are stored. Common locations are locales/, locale/, i18n/, translations/, public/locales/, and src/locales/.",
+            "description": "i18ntk needs to know where your locale JSON files are stored. Common locations are locales/, locale/, i18n/, translations/, public/locales/, and src/locales/.\n[Detect and Scan](command:i18ntk.detectLocaleDirectory?%5B%7B%22rescan%22%3Atrue%7D%5D)\n[Choose Folder and Scan](command:i18ntk.chooseLocaleDirectory?%5B%7B%22rescan%22%3Atrue%7D%5D)",
             "media": {
-              "markdown": "walkthroughs/getting-started.md#1-detect-or-choose-your-locale-directory"
-            }
+              "markdown": "walkthroughs/01-locale-directory.md"
+            },
+            "completionEvents": [
+              "onCommand:i18ntk.detectLocaleDirectory",
+              "onCommand:i18ntk.chooseLocaleDirectory",
+              "onSettingChanged:i18ntk.localeDirectory"
+            ]
           },
           {
             "id": "runFirstScan",
             "title": "Run Your First Scan",
-            "description": "After the locale directory is set, run the workspace scanner to index all translation keys. The scanner discovers source files, parses locale JSONs, and generates diagnostics.",
+            "description": "After the locale directory is set, run the workspace scanner to index all translation keys. The scanner discovers source files, parses locale JSONs, and generates diagnostics.\n[Scan Workspace](command:i18ntk.scanWorkspace)",
             "media": {
-              "markdown": "walkthroughs/getting-started.md#2-run-your-first-scan"
-            }
+              "markdown": "walkthroughs/02-first-scan.md"
+            },
+            "completionEvents": [
+              "onCommand:i18ntk.scanWorkspace"
+            ]
           },
           {
             "id": "understandTree",
             "title": "Understand the Locale Health Tree",
-            "description": "The Locale Health view in the Activity Bar shows Actions, Project Health stats, Missing Keys, Placeholder Mismatches, and more.",
+            "description": "The Locale Health view in the Activity Bar shows Actions, Project Health stats, Missing Keys, Placeholder Mismatches, and more.\n[Refresh Locale Health](command:i18ntk.refreshLocaleHealth)\n[Open Summary Report](command:i18ntk.openReport)",
             "media": {
-              "markdown": "walkthroughs/getting-started.md#3-understand-the-locale-health-tree"
-            }
+              "markdown": "walkthroughs/03-locale-health-tree.md"
+            },
+            "completionEvents": [
+              "onView:i18ntk.localeHealth",
+              "onCommand:i18ntk.refreshLocaleHealth",
+              "onCommand:i18ntk.openReport"
+            ]
           },
           {
             "id": "configureAutoTranslate",
             "title": "Configure Auto Translate",
-            "description": "i18ntk supports automatic translation via Google Translate (free), DeepL, and LibreTranslate. Choose your provider, select target locales, and run auto-translate.",
+            "description": "i18ntk supports automatic translation via Google Translate (free), DeepL, and LibreTranslate. Choose your provider, select target locales, and run auto-translate.\n[Open Workbench Settings](command:i18ntk.openSettings)\n[Auto Translate Missing](command:i18ntk.autoTranslateMissing)",
             "media": {
-              "markdown": "walkthroughs/getting-started.md#4-configure-auto-translate"
-            }
+              "markdown": "walkthroughs/04-auto-translate.md"
+            },
+            "completionEvents": [
+              "onCommand:i18ntk.openSettings",
+              "onCommand:i18ntk.autoTranslateMissing",
+              "onSettingChanged:i18ntk.autoTranslateProvider",
+              "onSettingChanged:i18ntk.autoTranslateTargets",
+              "onSettingChanged:i18ntk.autoTranslateMode"
+            ]
           },
           {
             "id": "dailyWorkflow",
             "title": "Daily Workflow & Next Steps",
-            "description": "Open the Activity Bar, scan on save, use quick fixes, view reports, and explore the Translation Grid Editor for a spreadsheet view of translations.",
+            "description": "Open the Activity Bar, scan on save, use quick fixes, view reports, and explore the Translation Grid Editor for a spreadsheet view of translations.\n[Open Native Settings](command:i18ntk.openNativeSettings)\n[Open Translation Grid](command:i18ntk.openTranslationGrid)",
             "media": {
-              "markdown": "walkthroughs/getting-started.md#5-daily-workflow"
-            }
+              "markdown": "walkthroughs/05-daily-workflow.md"
+            },
+            "completionEvents": [
+              "onCommand:i18ntk.openNativeSettings",
+              "onCommand:i18ntk.openTranslationGrid",
+              "onSettingChanged:i18ntk.autoScanOnSave"
+            ]
           }
         ]
       }
@@ -584,10 +609,10 @@
     "test:unit": "node --test out/test/unit/*.test.js",
     "test": "npm run test:compile && npm run test:unit",
     "verify": "npm test && npm run package",
-    "package": "vsce package --out ../i18ntk-workbench-1.2.1.vsix"
+    "package": "vsce package --out ../i18ntk-workbench-1.2.2.vsix"
   },
   "dependencies": {
-    "i18ntk": "file:../i18ntk-4.4.3.tgz"
+    "i18ntk": "file:../i18ntk-4.4.4.tgz"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

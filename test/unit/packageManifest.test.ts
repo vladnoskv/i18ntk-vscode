@@ -12,6 +12,13 @@ const manifest = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package
       activitybar?: Array<{ id: string; icon: string }>;
     };
     views?: Record<string, Array<{ id: string }>>;
+    walkthroughs?: Array<{
+      steps: Array<{
+        media?: { markdown?: string };
+        description?: string;
+        completionEvents?: string[];
+      }>;
+    }>;
   };
   scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
@@ -61,12 +68,30 @@ test('package scripts separate compile, locale asset copy, unit tests, aggregate
   assert.equal(manifest.scripts?.['test:unit'], 'node --test out/test/unit/*.test.js');
   assert.equal(manifest.scripts?.test, 'npm run test:compile && npm run test:unit');
   assert.equal(manifest.scripts?.verify, 'npm test && npm run package');
-  assert.equal(manifest.scripts?.package, 'vsce package --out ../i18ntk-workbench-1.2.0.vsix');
+  assert.equal(manifest.scripts?.package, 'vsce package --out ../i18ntk-workbench-1.2.2.vsix');
   assert.ok(manifest.dependencies?.i18ntk);
   assert.ok(manifest.devDependencies?.['@vscode/vsce']);
   assert.equal(manifest.devDependencies?.vsce, undefined);
 });
 
 test('manifest includes extension locale assets in the package', () => {
-  assert.equal(manifest.dependencies?.i18ntk, 'file:../i18ntk-4.4.2.tgz');
+  assert.equal(manifest.dependencies?.i18ntk, 'file:../i18ntk-4.4.4.tgz');
+});
+
+test('walkthrough markdown media uses package files without heading fragments', () => {
+  const walkthroughs = manifest.contributes?.walkthroughs ?? [];
+  assert.equal(walkthroughs.length, 1);
+  const steps = walkthroughs[0]?.steps ?? [];
+  assert.equal(steps.length, 5);
+
+  for (const step of steps) {
+    const markdownPath = step.media?.markdown;
+    if (typeof markdownPath !== 'string') {
+      throw new Error('walkthrough step should reference markdown media');
+    }
+    assert.equal(markdownPath.includes('#'), false, `${markdownPath} should not include a heading fragment`);
+    assert.equal(fs.existsSync(path.resolve(process.cwd(), markdownPath)), true, `${markdownPath} should exist`);
+    assert.ok(step.description?.includes('command:'), 'walkthrough step should expose an action button');
+    assert.ok(step.completionEvents?.length, 'walkthrough step should define completion events');
+  }
 });

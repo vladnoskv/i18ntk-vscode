@@ -1,29 +1,31 @@
 import * as vscode from 'vscode';
 import { ResolvedI18ntkConfig } from '../types';
+import { enumConfigValue, getConfigValue, getSharedWorkbenchSettings, loadSharedConfig } from './sharedConfig';
 
-export function getExtensionConfig(rootPath: string, localeDirectory: string): ResolvedI18ntkConfig {
-  const config = vscode.workspace.getConfiguration('i18ntk');
+export async function getExtensionConfig(rootPath: string, localeDirectory: string): Promise<ResolvedI18ntkConfig> {
+  const shared = getSharedWorkbenchSettings(await loadSharedConfig(rootPath));
   return {
     rootPath,
     localeDirectory,
-    sourceLocale: config.get('sourceLocale', 'en'),
-    keyStyle: config.get('keyStyle', 'dot'),
-    autoScanOnSave: config.get('autoScanOnSave', false),
-    autoScanOnFileChange: config.get('autoScanOnFileChange', false),
-    scanOnStartup: config.get('scanOnStartup', false),
-    runCliValidationOnScan: config.get('runCliValidationOnScan', false),
-    showInlineDiagnostics: config.get('showInlineDiagnostics', true),
-    showHoverTranslations: config.get('showHoverTranslations', true),
-    reportFormat: config.get('reportFormat', 'webview'),
-    maxScanFiles: config.get('maxScanFiles', 2000),
-    exclude: config.get('exclude', ['node_modules', '.next', 'dist', 'build', 'coverage']),
-    customWrappers: config.get('customWrappers', []),
-    autoTranslateProvider: config.get('autoTranslateProvider', 'google'),
-    autoTranslateTargets: config.get('autoTranslateTargets', []),
-    autoTranslateMode: config.get('autoTranslateMode', 'onlyMissing')
+    sourceLocale: getConfigValue('i18ntk', 'sourceLocale', shared.sourceLocale, 'en'),
+    keyStyle: enumConfigValue('i18ntk', 'keyStyle', shared.keyStyle, 'dot', ['dot', 'snake', 'camel', 'kebab', 'flat']),
+    autoScanOnSave: getConfigValue('i18ntk', 'autoScanOnSave', shared.autoScanOnSave, false),
+    autoScanOnFileChange: getConfigValue('i18ntk', 'autoScanOnFileChange', shared.autoScanOnFileChange, false),
+    scanOnStartup: getConfigValue('i18ntk', 'scanOnStartup', shared.scanOnStartup, false),
+    runCliValidationOnScan: getConfigValue('i18ntk', 'runCliValidationOnScan', shared.runCliValidationOnScan, false),
+    showInlineDiagnostics: getConfigValue('i18ntk', 'showInlineDiagnostics', shared.showInlineDiagnostics, true),
+    showHoverTranslations: getConfigValue('i18ntk', 'showHoverTranslations', shared.showHoverTranslations, true),
+    reportFormat: enumConfigValue('i18ntk', 'reportFormat', shared.reportFormat, 'webview', ['webview', 'markdown']),
+    maxScanFiles: getConfigValue('i18ntk', 'maxScanFiles', shared.maxScanFiles, 2000),
+    exclude: getConfigValue('i18ntk', 'exclude', shared.exclude, ['node_modules', '.next', 'dist', 'build', 'coverage']),
+    customWrappers: getConfigValue('i18ntk', 'customWrappers', shared.customWrappers, []),
+    autoTranslateProvider: enumConfigValue('i18ntk', 'autoTranslateProvider', shared.autoTranslateProvider, 'google', ['google', 'deepl', 'libretranslate']),
+    autoTranslateTargets: getConfigValue('i18ntk', 'autoTranslateTargets', shared.autoTranslateTargets, []),
+    autoTranslateMode: enumConfigValue('i18ntk', 'autoTranslateMode', shared.autoTranslateMode, 'onlyMissing', ['onlyMissing', 'translateAll', 'dryRun'])
   };
 }
 
-export function getConfiguredLocaleDirectory(): string {
-  return vscode.workspace.getConfiguration('i18ntk').get('localeDirectory', '');
+export async function getConfiguredLocaleDirectory(rootPath: string): Promise<string> {
+  const shared = getSharedWorkbenchSettings(await loadSharedConfig(rootPath));
+  return getConfigValue('i18ntk', 'localeDirectory', shared.localeDirectory, '');
 }

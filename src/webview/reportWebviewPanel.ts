@@ -12,7 +12,7 @@ export class ReportWebviewPanel {
   open(report: I18ntkReport): void {
     this.currentReport = report;
     this.ensurePanel();
-    this.panel!.webview.html = renderReportHtml(report, createNonce());
+    this.panel!.webview.html = renderReportHtml(report, createNonce(), getIgnoredDiagnostics());
     this.panel!.reveal();
   }
 
@@ -54,6 +54,9 @@ export class ReportWebviewPanel {
       case 'openIssue':
         await this.openIssue(message.issueId);
         break;
+      case 'ignoreIssues':
+        await this.ignoreIssues(message.issueIds);
+        break;
       case 'openFile':
         await this.openFile(message.file, message.line, message.column);
         break;
@@ -64,6 +67,24 @@ export class ReportWebviewPanel {
     const issue = this.currentReport?.issues.find((item: I18ntkIssue) => item.id === issueId);
     if (!issue?.file) return;
     await this.openFile(issue.file, issue.line, issue.column);
+  }
+
+  private async ignoreIssues(issueIds: string[]): Promise<void> {
+    if (!this.currentReport || issueIds.length === 0) return;
+    const ignoreIds = issueIds
+      .map((id) => this.currentReport?.issues.find((item) => item.id === id))
+      .filter((issue): issue is I18ntkIssue => Boolean(issue))
+      .map(reportIssueIgnoreId)
+      .filter((id): id is string => Boolean(id));
+    if (ignoreIds.length === 0) return;
+
+    const config = vscode.workspace.getConfiguration('i18ntk');
+    const ignored = new Set(config.get('ignoredDiagnostics', []) as string[]);
+    ignoreIds.forEach((id) => ignored.add(id));
+    await config.update('ignoredDiagnostics', [...ignored].sort(), vscode.ConfigurationTarget.Workspace);
+    vscode.window.showInformationMessage(`Ignored ${ignoreIds.length} i18ntk report issue${ignoreIds.length === 1 ? '' : 's'}.`);
+    this.panel!.webview.html = renderReportHtml(this.currentReport, createNonce(), [...ignored]);
+    await vscode.commands.executeCommand('i18ntk.refreshDiagnostics');
   }
 
   private async openFile(file: string, line?: number, column?: number): Promise<void> {
@@ -92,6 +113,27 @@ export class ReportWebviewPanel {
 <style>body{font-family:var(--vscode-font-family);background:var(--vscode-editor-background);color:var(--vscode-foreground);padding:24px}p{color:var(--vscode-descriptionForeground);white-space:pre-wrap}button{color:var(--vscode-button-foreground);background:var(--vscode-button-background);border:0;padding:7px 10px;border-radius:3px;cursor:pointer}</style></head>
 <body><h1>${escapeHtml(message)}</h1>${details ? `<p>${escapeHtml(details)}</p>` : ''}<button id="refresh">Refresh</button>
 <script nonce="${nonce}">const vscode=acquireVsCodeApi();document.getElementById('refresh').addEventListener('click',()=>vscode.postMessage({type:'refreshReport'}));</script></body></html>`;
+  }
+}
+
+function getIgnoredDiagnostics(): string[] {
+  return vscode.workspace.getConfiguration('i18ntk').get('ignoredDiagnostics', []) as string[];
+}
+
+function reportIssueIgnoreId(issue: I18ntkIssue): string | undefined {
+  const code = issueTypeToDiagnosticCode(issue.type);
+  if (!code || !issue.key) return undefined;
+  return [code, issue.key, issue.locale].filter(Boolean).join(':');
+}
+
+function issueTypeToDiagnosticCode(type: I18ntkIssue['type']): string | undefined {
+  switch (type) {
+    case 'missing_key': return 'i18ntk.missingKey';
+    case 'unused_key': return 'i18ntk.unusedKey';
+    case 'placeholder_mismatch': return 'i18ntk.placeholderMismatch';
+    case 'likely_untranslated': return 'i18ntk.riskyContent';
+    case 'expansion_risk': return 'i18ntk.expansionRisk';
+    default: return undefined;
   }
 }
 

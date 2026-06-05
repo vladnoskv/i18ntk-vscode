@@ -21,7 +21,8 @@
       "noLocaleFiles": "No se encontraron archivos de locales. Ejecuta Analizar espacio de trabajo primero.",
       "noScanData": "No hay datos de analisis disponibles. Ejecuta i18ntk: Analizar espacio de trabajo primero.",
       "diagnosticsRefreshed": "Diagnosticos de i18ntk actualizados desde los datos de analisis actuales.",
-      "decorationsRebuilt": "Decoraciones de i18ntk reconstruidas desde los datos de analisis actuales."
+      "decorationsRebuilt": "Decoraciones de i18ntk reconstruidas desde los datos de analisis actuales.",
+      "extensionLanguageUpdated": "Idioma de i18ntk Workbench actualizado."
     },
     "titles": {
       "openTranslationKey": "Clave de traduccion para abrir",

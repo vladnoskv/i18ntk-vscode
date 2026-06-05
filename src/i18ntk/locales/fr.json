@@ -21,7 +21,8 @@
       "noLocaleFiles": "Aucun fichier de langue trouve. Lancez d'abord Analyser l'espace de travail.",
       "noScanData": "Aucune donnee d'analyse disponible. Lancez i18ntk : Analyser l'espace de travail d'abord.",
       "diagnosticsRefreshed": "Diagnostics i18ntk actualises a partir des donnees d'analyse actuelles.",
-      "decorationsRebuilt": "Decorations i18ntk reconstruites a partir des donnees d'analyse actuelles."
+      "decorationsRebuilt": "Decorations i18ntk reconstruites a partir des donnees d'analyse actuelles.",
+      "extensionLanguageUpdated": "Langue d'i18ntk Workbench mise a jour."
     },
     "titles": {
       "openTranslationKey": "Cle de traduction a ouvrir",
