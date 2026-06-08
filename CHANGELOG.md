@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.3 - 2026-06-08
+
+- Replaced dynamic `require('vscode')` calls in `workspaceScanner.ts` with a proper `import * as vscode from 'vscode'` to avoid Node16 ESM context failures.
+- Replaced `require('fs')` in `translationGridEditorProvider.ts` with a dynamic `import('node:fs')` for ESM compatibility.
+- Hover provider now uses the dynamic `isLensActive()` check on every hover request instead of the static activation-time check so that Lens enable/disable changes take effect without reloading.
+- Translation key completions now receive `sourceLocale` from the scan result and use the configured source locale instead of the first iterated key.
+- Changed the default diagnostic `DEFAULT_RANGE` from `(0,0)-(0,1)` to `(0,0)-(0,0)` so that diagnostics without location data do not incorrectly highlight the first character of a file.
+- Fixed `saveSharedWorkbenchSettings` so `sourceDir` and locale directory (`i18nDir`) are no longer conflated when saving.
+
 ## 1.2.2 - 2026-06-05
 
 - Fixed walkthrough Markdown media links so VS Code no longer tries to open files with heading fragments appended to the path.

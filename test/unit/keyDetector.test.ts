@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { detectTranslationKeysAt, findTranslationKeys } from '../../src/hover/keyDetector';
+import { detectSuspectedCopyFormatters, detectTranslationKeysAt, findClientBoundaryLocaleImports, findTranslationKeys } from '../../src/hover/keyDetector';
 
 test('findTranslationKeys detects common i18n call patterns', () => {
   const source = [
@@ -96,4 +96,47 @@ test('findTranslationKeys expands scoped namespace helpers', () => {
     ['news.page.topics.', true],
     ['news.page.', true]
   ]);
+});
+
+test('callBoundaryForName does not match i18n.t when preceded by a dot', () => {
+  const source = 'obj.i18n.t("should.not.match");\ni18n.t("should.match");';
+  const keys = findTranslationKeys(source).map((item) => item.key);
+  assert.equal(keys.includes('should.match'), true);
+  assert.equal(keys.includes('should.not.match'), false);
+});
+
+test('detectSuspectedCopyFormatters detects configured copy formatter names', () => {
+  const source = 'const fmt = useCallback(() => "hello");\nconst copy = (x) => x && x;\nconst tx = useMemo(() => "bye");';
+  const results = detectSuspectedCopyFormatters(source, ['fmt', 'copy']);
+  const names = results.map((r) => r.name);
+  assert.deepEqual(names, ['fmt', 'copy', 'tx']);
+  for (const result of results) {
+    assert.equal(result.type, 'suspectedCopyFormatter');
+    assert.ok(result.message.includes(result.name));
+  }
+});
+
+test('detectSuspectedCopyFormatters does not flag translation runtime calls', () => {
+  const source = 'const fmt = t;\nconst tx = useCallback(() => t("hello"));';
+  const results = detectSuspectedCopyFormatters(source, ['fmt']);
+  assert.equal(results.length, 0);
+});
+
+test('findClientBoundaryLocaleImports detects default JSON imports with use client', () => {
+  const source = `'use client';\nimport en from "./locales/en/common.json";`;
+  const issues = findClientBoundaryLocaleImports(source);
+  assert.equal(issues.length, 1);
+  assert.ok(issues[0].message.includes('client bundle'));
+});
+
+test('findClientBoundaryLocaleImports detects import * as JSON imports', () => {
+  const source = `"use client";\nimport * as en from "../../locales/en/common.json";`;
+  const issues = findClientBoundaryLocaleImports(source);
+  assert.equal(issues.length, 1);
+});
+
+test('findClientBoundaryLocaleImports does not flag non-client files', () => {
+  const source = `import en from "./locales/en/common.json";`;
+  const issues = findClientBoundaryLocaleImports(source);
+  assert.equal(issues.length, 0);
 });

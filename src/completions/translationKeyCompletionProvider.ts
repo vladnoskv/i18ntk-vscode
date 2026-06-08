@@ -4,6 +4,7 @@ export class TranslationKeyCompletionProvider implements vscode.CompletionItemPr
   private result: (() => {
     allKeys: string[];
     keyValues: Record<string, Record<string, string>>;
+    sourceLocale?: string;
     sources: Array<{ key: string; filePath: string }>;
   } | undefined) | undefined;
 
@@ -14,6 +15,7 @@ export class TranslationKeyCompletionProvider implements vscode.CompletionItemPr
     provider: () => {
       allKeys: string[];
       keyValues: Record<string, Record<string, string>>;
+      sourceLocale?: string;
       sources: Array<{ key: string; filePath: string }>;
     } | undefined
   ): void {
@@ -46,7 +48,7 @@ export class TranslationKeyCompletionProvider implements vscode.CompletionItemPr
       item.detail = 'i18ntk Translation Key';
       item.sortText = `0_${key}`;
 
-      const sourceLocale = Object.keys(data.keyValues)[0];
+      const sourceLocale = data.sourceLocale || Object.keys(data.keyValues)[0];
       const sourceValue = sourceLocale ? data.keyValues[sourceLocale]?.[key] : undefined;
       if (sourceValue) {
         item.documentation = new vscode.MarkdownString();

@@ -20,14 +20,21 @@ export function stringifyJson(data: unknown, indent = 2, eol: '\n' | '\r\n' = '\
 
 export function flattenJson(value: unknown, prefix = ''): Record<string, string> {
   const result: Record<string, string> = {};
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return result;
+  if (value === null || value === undefined) return result;
+  if (Array.isArray(value)) return result;
+  if (typeof value !== 'object') {
+    result[prefix || 'value'] = String(value);
+    return result;
+  }
 
   for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
     const fullKey = prefix ? `${prefix}.${key}` : key;
     if (child && typeof child === 'object' && !Array.isArray(child)) {
       Object.assign(result, flattenJson(child, fullKey));
-    } else if (typeof child === 'string') {
-      result[fullKey] = child;
+    } else if (child === null) {
+      result[fullKey] = 'null';
+    } else if (child !== undefined) {
+      result[fullKey] = String(child);
     }
   }
 

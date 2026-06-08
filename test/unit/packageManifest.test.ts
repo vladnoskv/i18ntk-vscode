@@ -68,14 +68,14 @@ test('package scripts separate compile, locale asset copy, unit tests, aggregate
   assert.equal(manifest.scripts?.['test:unit'], 'node --test out/test/unit/*.test.js');
   assert.equal(manifest.scripts?.test, 'npm run test:compile && npm run test:unit');
   assert.equal(manifest.scripts?.verify, 'npm test && npm run package');
-  assert.equal(manifest.scripts?.package, 'vsce package --out ../i18ntk-workbench-1.2.2.vsix');
+  assert.equal(manifest.scripts?.package, 'vsce package --out ../i18ntk-workbench-1.2.3.vsix');
   assert.ok(manifest.dependencies?.i18ntk);
   assert.ok(manifest.devDependencies?.['@vscode/vsce']);
   assert.equal(manifest.devDependencies?.vsce, undefined);
 });
 
 test('manifest includes extension locale assets in the package', () => {
-  assert.equal(manifest.dependencies?.i18ntk, 'file:../i18ntk-4.4.4.tgz');
+  assert.equal(manifest.dependencies?.i18ntk, 'file:../i18ntk-4.4.5.tgz');
 });
 
 test('walkthrough markdown media uses package files without heading fragments', () => {

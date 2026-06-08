@@ -275,7 +275,7 @@ export function findClientBoundaryLocaleImports(text: string): Array<{ importPat
   const issues: Array<{ importPath: string; message: string }> = [];
   const isClient = /['"]use client['"]/.test(text) || /['"]use client['"]/.test(String(text || '').slice(0, 200));
   if (!isClient) return issues;
-  const importPattern = /\bimport\s+\w+\s+from\s+['"]([^'"]+\.json)['"]/g;
+  const importPattern = /\bimport\s+(?:\*\s+as\s+\w+|type\s+\{[^}]+\}|type\s+\*\s+as\s+\w+|\{[^}]*\}|\w+)\s+from\s+['"]([^'"]+\.json)['"]/g;
   let match;
   while ((match = importPattern.exec(text)) !== null) {
     if (/\b(locales?|i18n|translations?)\b/i.test(match[1])) {
@@ -288,20 +288,23 @@ export function findClientBoundaryLocaleImports(text: string): Array<{ importPat
   return issues;
 }
 
-export function detectSuspectedCopyFormatters(text: string): Array<{ name: string; line: number; type: string; message: string }> {
+export function detectSuspectedCopyFormatters(text: string, formatterNames?: string[]): Array<{ name: string; line: number; type: string; message: string }> {
+  const names = [...new Set(['tx', ...(formatterNames && formatterNames.length > 0 ? formatterNames : [...copyFormatters])])];
   const formatters: Array<{ name: string; line: number; type: string; message: string }> = [];
-  const declarationPattern = /\b(?:const|let|var)\s+(tx)\s*=\s*(?:useCallback\s*\(|useMemo\s*\(|\([^)]*\)\s*=>|function\s*\()/g;
+  const altList = names.map((n) => escapeRegExp(n)).join('|');
+  const declarationPattern = new RegExp(`\\b(?:const|let|var)\\s+(${altList})\\s*=\\s*(?:useCallback\\s*\\(|useMemo\\s*\\(|\\([^)]*\\)\\s*=>|function\\s*\\()`, 'g');
   let match;
   while ((match = declarationPattern.exec(text)) !== null) {
+    const detectedName = match[1];
     const afterEquals = text.slice(match.index + match[0].length, Math.min(match.index + match[0].length + 500, text.length));
     const callsTranslationRuntime = /\b(?:t|i18n\.t|\.getTranslation|translate)\s*\(/.test(afterEquals);
     if (!callsTranslationRuntime) {
       const before = text.slice(0, match.index);
       formatters.push({
-        name: 'tx',
+        name: detectedName,
         line: before.split(/\r?\n/).length,
         type: 'suspectedCopyFormatter',
-        message: `Local function "tx" does not call a known translation runtime and may be a copy formatter. Rename to "copy" or configure "copyFormatters" in .i18ntk-config to suppress.`,
+        message: `Local function "${detectedName}" does not call a known translation runtime and may be a copy formatter. Rename to "copy" or configure "copyFormatters" in .i18ntk-config to suppress.`,
       });
     }
   }
@@ -371,7 +374,7 @@ function findQuotedContentEnd(text: string, start: number, quote: string): numbe
 }
 
 function callBoundaryForName(name: string): string {
-  return /^[A-Za-z_$][\w$]*$/.test(name) ? '(?<![\\w$.])' : '(?<![\\w$])';
+  return /^[A-Za-z_$][\w$]*$/.test(name) ? '(?<![\\w$.])' : '(?<![\\w$.])';
 }
 
 function joinNamespace(namespace: string | undefined, key: string): string {

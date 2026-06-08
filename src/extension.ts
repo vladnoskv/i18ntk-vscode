@@ -64,6 +64,7 @@ export function activate(context: vscode.ExtensionContext): void {
     return {
       allKeys: Object.keys(result.keyValues[result.sourceLocale] ?? {}).sort(),
       keyValues: result.keyValues,
+      sourceLocale: result.sourceLocale,
       sources: result.sourceUsages.map((u) => ({ key: u.key, filePath: u.filePath }))
     };
   });
@@ -288,9 +289,11 @@ export function activate(context: vscode.ExtensionContext): void {
       documentLinkProvider
     )
   );
-  if (!hasLensExtension) {
-    context.subscriptions.push(vscode.languages.registerHoverProvider(documentSelector, new TranslationHoverProvider(() => state.result)));
-  }
+  const hoverProvider = vscode.languages.registerHoverProvider(documentSelector, new TranslationHoverProvider(() => {
+    if (isLensActive()) return undefined;
+    return state.result;
+  }));
+  context.subscriptions.push(hoverProvider);
 
   context.subscriptions.push(vscode.commands.registerCommand('i18ntk.openTranslationGrid', async (fileUri?: vscode.Uri) => {
     let uri: vscode.Uri;

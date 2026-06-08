@@ -1,6 +1,6 @@
 import { DiagnosticLike, DiagnosticRuleSeverity, DiagnosticSettings, I18nScanResult, TextRange } from '../types';
 
-const DEFAULT_RANGE: TextRange = { startLine: 0, startCharacter: 0, endLine: 0, endCharacter: 1 };
+const DEFAULT_RANGE: TextRange = { startLine: 0, startCharacter: 0, endLine: 0, endCharacter: 0 };
 
 export const DEFAULT_DIAGNOSTIC_SEVERITIES: Record<string, DiagnosticRuleSeverity> = {
   'i18ntk.missingKey': 'warning',

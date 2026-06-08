@@ -19,18 +19,32 @@ export class LocaleFileService {
       return files;
     }
 
+    const visitDir = async (dirPath: string, locale: string): Promise<void> => {
+      let children: any[];
+      try {
+        children = await fs.promises.readdir(dirPath, { withFileTypes: true });
+      } catch {
+        return;
+      }
+      for (const child of children) {
+        const childPath = path.join(dirPath, child.name);
+        if (child.isDirectory()) {
+          await visitDir(childPath, locale);
+        } else if (child.isFile() && child.name.endsWith('.json')) {
+          const rel = path.relative(path.join(root, locale), childPath);
+          const parts = rel.split(path.sep);
+          parts[parts.length - 1] = path.basename(parts[parts.length - 1], '.json');
+          const namespace = parts.join('/');
+          const loaded = await this.load(locale, namespace, childPath);
+          if (loaded) files.push(loaded);
+        }
+      }
+    };
+
     for (const entry of entries) {
       const fullPath = path.join(root, entry.name);
       if (entry.isDirectory()) {
-        const locale = entry.name;
-        const childFiles = await fs.promises.readdir(fullPath, { withFileTypes: true }).catch(() => []);
-        for (const child of childFiles) {
-          if (child.isFile() && child.name.endsWith('.json')) {
-            const namespace = path.basename(child.name, '.json');
-            const loaded = await this.load(locale, namespace, path.join(fullPath, child.name));
-            if (loaded) files.push(loaded);
-          }
-        }
+        await visitDir(fullPath, entry.name);
       } else if (entry.isFile() && entry.name.endsWith('.json')) {
         const locale = path.basename(entry.name, '.json');
         const loaded = await this.load(locale, 'common', fullPath);

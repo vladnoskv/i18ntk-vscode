@@ -32,6 +32,20 @@ const SOURCE_EXTENSIONS = new Set(['.js', '.jsx', '.ts', '.tsx', '.vue', '.svelt
 const MAX_SOURCE_USAGE_SCAN_BYTES = 2 * 1024 * 1024;
 const MAX_KNOWN_KEY_LITERAL_SCAN_BYTES = 512 * 1024;
 
+function throwIfCancelled(token?: { isCancellationRequested: boolean }): void {
+  if (token?.isCancellationRequested) {
+    try {
+      const vscode = require('vscode');
+      throw new vscode.CancellationError();
+    } catch (e: any) {
+      if (e?.name === 'CancellationError' || String(e?.code) === 'ERR_MODULE_NOT_FOUND') {
+        throw new Error('Operation cancelled');
+      }
+      throw e;
+    }
+  }
+}
+
 export class WorkspaceScanner {
   private readonly localeFiles = new LocaleFileService();
 
@@ -39,7 +53,7 @@ export class WorkspaceScanner {
 
   async scan(rootPath: string, config: ResolvedI18ntkConfig, token?: { isCancellationRequested: boolean }): Promise<I18nScanResult> {
     const localeFiles = await this.localeFiles.discover(config);
-    if (token?.isCancellationRequested) throw new (require('vscode') as any).CancellationError();
+    if (token?.isCancellationRequested) throwIfCancelled(token);
     const locales = [...new Set(localeFiles.map((file) => file.locale))].sort();
     const keyValues: Record<string, Record<string, string>> = {};
 
@@ -49,9 +63,9 @@ export class WorkspaceScanner {
 
     const sourceValues = keyValues[config.sourceLocale] ?? {};
     const sourceFiles = await findFiles(rootPath, SOURCE_EXTENSIONS, config.exclude, config.maxScanFiles);
-    if (token?.isCancellationRequested) throw new (require('vscode') as any).CancellationError();
+    throwIfCancelled(token);
     const sourceUsages = await this.scanSourceUsages(sourceFiles, config.customWrappers, keyValues, locales, token);
-    if (token?.isCancellationRequested) throw new (require('vscode') as any).CancellationError();
+    throwIfCancelled(token);
 
     const clientBoundaryIssues: Array<{ filePath: string; importPath: string; message: string }> = [];
     const copyFormatters: Array<{ filePath: string; name: string; line: number; type: string; message: string }> = [];
@@ -259,7 +273,7 @@ export class WorkspaceScanner {
           });
         }
 
-        if (/\\n|\\t|\\\\n/.test(value) && !sourceValues[key]?.includes('\\n')) {
+        if (/[\n\r\t]/.test(value) && !/[\n\r\t]/.test(sourceValues[key] ?? '')) {
           issues.push({
             key,
             locale,
@@ -371,16 +385,31 @@ function aliasesForKey(key: string): Set<string> {
   return aliases;
 }
 
-function usageExistsInLocale(usage: { key: string; dynamic?: boolean }, localeValues: Record<string, string>): boolean {
-  if (usage.dynamic) {
-    return [...aliasesForKey(usage.key)].some((prefix) => Object.keys(localeValues).some((key) => key.startsWith(prefix)));
+function aliasesForKeyNoConflict(sourceKey: string, allLocaleKeys: Set<string>): Set<string> {
+  const alternatives = new Set([sourceKey]);
+  const dotVariant = sourceKey.replace(/_/g, '.');
+  const snakeVariant = sourceKey.replace(/\./g, '_');
+  if (dotVariant !== sourceKey && !allLocaleKeys.has(dotVariant)) {
+    alternatives.add(dotVariant);
   }
-  return [...aliasesForKey(usage.key)].some((key) => localeValues[key] !== undefined);
+  if (snakeVariant !== sourceKey && !allLocaleKeys.has(snakeVariant)) {
+    alternatives.add(snakeVariant);
+  }
+  return alternatives;
 }
 
-function usageMatchesKey(usage: { key: string; dynamic?: boolean }, key: string): boolean {
-  const keyAliases = aliasesForKey(key);
-  const usageAliases = aliasesForKey(usage.key);
+function usageExistsInLocale(usage: { key: string; dynamic?: boolean }, localeValues: Record<string, string>, allLocaleKeys?: Set<string>): boolean {
+  const localeKeys = allLocaleKeys ?? new Set(Object.keys(localeValues));
+  if (usage.dynamic) {
+    return [...aliasesForKeyNoConflict(usage.key, localeKeys)].some((prefix) => Object.keys(localeValues).some((key) => key.startsWith(prefix)));
+  }
+  return [...aliasesForKeyNoConflict(usage.key, localeKeys)].some((key) => localeValues[key] !== undefined);
+}
+
+function usageMatchesKey(usage: { key: string; dynamic?: boolean }, key: string, allLocaleKeys?: Set<string>): boolean {
+  const localeKeys = allLocaleKeys ?? new Set([key]);
+  const keyAliases = aliasesForKeyNoConflict(key, localeKeys);
+  const usageAliases = aliasesForKeyNoConflict(usage.key, localeKeys);
   if (usage.dynamic) {
     return [...usageAliases].some((prefix) => [...keyAliases].some((keyAlias) => keyAlias.startsWith(prefix)));
   }

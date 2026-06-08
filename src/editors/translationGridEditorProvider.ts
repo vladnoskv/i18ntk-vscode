@@ -116,7 +116,7 @@ export class TranslationGridEditorProvider implements vscode.CustomTextEditorPro
     if (!targetFile) return;
 
     try {
-      const nodeFs = require('fs') as typeof import('fs');
+      const nodeFs = await import('node:fs');
       const content = await nodeFs.promises.readFile(targetFile.filePath, 'utf8');
       const json: Record<string, unknown> = JSON.parse(content);
 

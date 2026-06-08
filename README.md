@@ -12,7 +12,20 @@ i18ntk Workbench gives i18n projects a focused VS Code control center: scan loca
 
 It is the full VS Code companion to the zero-dependency `i18ntk` npm package. Workbench owns the i18ntk Activity Bar sidebar; when i18ntk Lens is installed too, Lens stays inline-only with hovers, CodeLens, diagnostics, commands, and settings.
 
-## Latest in 1.2.2
+## Latest in 1.2.3
+
+- **Dynamic Lens Interop**: Hover translations now dynamically detect Lens presence on each request rather than using a one-time activation check; disabling or installing Lens mid-session takes effect without reloading.
+- **Source Locale Completions**: Translation key autocompletion now uses the configured source locale instead of the first iterated key, producing accurate source-value documentation.
+- **False Positive Prevention**: Multi-segment wrapper calls like `obj.i18n.t()` are no longer incorrectly matched as translation calls.
+- **Copy Formatter Detection**: `detectSuspectedCopyFormatters` now dynamically checks all configured copy formatter names (not just `tx`), catching `copy`, `fmt`, `formatCopy`, and custom names.
+- **Client Boundary Detection**: `import * as`, destructured `import { }`, and `import type { }` JSON locale imports are now detected alongside default imports.
+- **JSON Value Preservation**: `flattenJson` now preserves boolean, number, and null values as strings instead of silently dropping them from scan data.
+- **Nested Directory Discovery**: Locale file discovery now recursively traverses deeply nested subdirectories instead of stopping at one level.
+- **Alias Conflict Prevention**: Dot/snake key aliasing no longer conflates `a.b` with `a_b` when both exist as separate keys in locale data.
+- **Escape Sequence Detection**: Risky content detection now tests for actual newlines/tabs instead of literal `\n`/`\t` strings that never appear in parsed JSON.
+- **Diagnostic Precision**: Diagnostics without location data no longer incorrectly highlight the first character of a file.
+
+## Previous (1.2.2)
 
 - **Shared Project Config**: Workbench reads project defaults from `.i18ntk-config` under `extensions.workbench`, while explicit VS Code settings still take precedence.
 - **Language Pack Fallback**: the extension follows the active VS Code display language when a shipped Workbench locale exists and falls back to English for unsupported languages.

@@ -79,5 +79,5 @@ function toVsCodeRange(range: TextRange): vscode.Range {
 }
 
 function samePath(left: string, right: string): boolean {
-  return left.toLowerCase() === right.toLowerCase();
+  return left.replace(/\\/g, '/').toLowerCase() === right.replace(/\\/g, '/').toLowerCase();
 }
