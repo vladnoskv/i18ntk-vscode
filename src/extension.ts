@@ -260,8 +260,10 @@ export function activate(context: vscode.ExtensionContext): void {
     { scheme: 'file', language: 'javascriptreact' },
     { scheme: 'file', language: 'vue' },
     { scheme: 'file', language: 'svelte' },
+    { scheme: 'file', language: 'astro' },
+    { scheme: 'file', language: 'html' },
     { scheme: 'file', language: 'json' },
-    { scheme: 'file', pattern: '**/*.{ts,tsx,js,jsx,vue,svelte}' }
+    { scheme: 'file', pattern: '**/*.{ts,tsx,js,jsx,mjs,mts,cjs,cts,vue,svelte,astro,html}' }
   ];
 
   context.subscriptions.push(

@@ -2,7 +2,7 @@
   "name": "i18ntk-workbench",
   "displayName": "i18ntk Workbench",
   "description": "VS Code workbench for i18ntk projects: setup, scanning, validation, usage reports, key management, and CLI-backed Auto Translate.",
-  "version": "1.2.3",
+  "version": "1.3.0",
   "publisher": "VladNoskov",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -33,9 +33,26 @@
     "workspaceContains:translations",
     "workspaceContains:public/locales",
     "workspaceContains:src/locales",
+    "workspaceContains:app/i18n",
+    "workspaceContains:content/locales",
+    "workspaceContains:lang",
+    "workspaceContains:messages",
     "workspaceContains:i18ntk.config.json",
     "workspaceContains:i18ntk.config.js",
-    "workspaceContains:i18n.config.json"
+    "workspaceContains:i18n.config.json",
+    "workspaceContains:next.config.js",
+    "workspaceContains:next.config.ts",
+    "workspaceContains:next.config.mjs",
+    "workspaceContains:astro.config.mjs",
+    "workspaceContains:astro.config.ts",
+    "workspaceContains:remix.config.js",
+    "workspaceContains:remix.config.ts",
+    "workspaceContains:svelte.config.js",
+    "workspaceContains:nuxt.config.ts",
+    "workspaceContains:nuxt.config.js",
+    "workspaceContains:gatsby-config.js",
+    "workspaceContains:gatsby-config.ts",
+    "workspaceContains:Cargo.toml"
   ],
   "main": "./out/src/extension.js",
   "contributes": {
@@ -170,6 +187,12 @@
           "default": [
             "node_modules",
             ".next",
+            ".nuxt",
+            ".output",
+            ".astro",
+            ".svelte-kit",
+            ".cache",
+            "__generated__",
             "dist",
             "build",
             "coverage"
@@ -414,6 +437,12 @@
           },
           {
             "filenamePattern": "**/translations/**/*.json"
+          },
+          {
+            "filenamePattern": "**/messages/**/*.json"
+          },
+          {
+            "filenamePattern": "**/lang/**/*.json"
           }
         ],
         "priority": "option"
@@ -609,7 +638,7 @@
     "test:unit": "node --test out/test/unit/*.test.js",
     "test": "npm run test:compile && npm run test:unit",
     "verify": "npm test && npm run package",
-    "package": "vsce package --out ../i18ntk-workbench-1.2.3.vsix"
+    "package": "vsce package --out ../i18ntk-workbench-1.3.0.vsix"
   },
   "dependencies": {
     "i18ntk": "file:../i18ntk-4.4.5.tgz"

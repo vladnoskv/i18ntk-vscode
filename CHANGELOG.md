@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.3.0 - 2026-07-04
+
+### Added
+
+- **Framework-specific file extensions:** Added `.astro`, `.mdx`, `.mjs`, `.mts`, `.cjs`, `.cts`, `.rs` to `SOURCE_EXTENSIONS`. Astro components, ESM modules, and Rust source files are now scanned for translation keys.
+- **JSX Component Detection:** Added `findJsxComponentKeys()` to `keyDetector.ts` — detects `<Trans i18nKey>`, `<FormattedMessage id>`, `<FormattedMessage defaultMessage>`, `<t message>`, and `<Translate id>` JSX components.
+- **ICU/Fluent placeholder support:** Added `$variable` (Fluent), `{var, plural, ...}`, `{var, select, ...}`, `{var, number}` ICU MessageFormat patterns to `extractPlaceholders()` with token overlap deduplication and length safety limits.
+- **Framework-specific activation events:** Workbench now activates early for Next.js, Astro, Remix, Svelte, Nuxt, Gatsby config files and Cargo.toml.
+- **Framework-specific locale paths:** Added `app/i18n`, `content/locales`, `lang`, `messages` to locale directory auto-discovery candidates.
+- **Framework-specific exclude defaults:** Added `.nuxt`, `.output`, `.astro`, `.svelte-kit`, `.cache`, `__generated__` to exclude defaults.
+- **Framework-specific discovery excludes:** Added `.nuxt`, `.output`, `.astro`, `.svelte-kit`, `.cache`, `__generated__`, `target` to `DISCOVERY_EXCLUDES`.
+- **Translation Grid editor:** Added `messages` and `lang` filename patterns to custom editor selectors.
+
+### Changed
+
+- **Document selectors:** Added `astro` and `html` language IDs. Extended pattern globs to `{ts,tsx,js,jsx,mjs,mts,cjs,cts,vue,svelte,astro,html}`.
+- **Health score:** Fixed unbounded penalty that could produce negative scores. Now capped at `(totalKeys-1)*2` with 40% linear decay maximum.
+- **Exclude defaults (UI):** Updated `package.json` default excludes to include all framework-specific directories.
+- **Locale discovery:** Extended `LOCALE_CANDIDATES` and `LOCALE_ROOT_NAMES` with new framework paths.
+
 ## 1.2.3 - 2026-06-08
 
 - Replaced dynamic `require('vscode')` calls in `workspaceScanner.ts` with a proper `import * as vscode from 'vscode'` to avoid Node16 ESM context failures.

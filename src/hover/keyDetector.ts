@@ -46,6 +46,9 @@ export function findTranslationKeys(text: string, customWrappers: string[] = [])
   for (const [name, namespace] of findImportedLocaleObjects(text)) {
     matches.push(...findImportedLocaleObjectReads(text, name, namespace));
   }
+  for (const match of findJsxComponentKeys(text)) {
+    matches.push(match);
+  }
   return dedupe(matches).sort((a, b) => a.start - b.start);
 }
 
@@ -249,6 +252,29 @@ function findAttributeKeys(text: string): TranslationKeyMatch[] {
       const start = match.index + match[0].indexOf(key);
       const end = start + key.length;
       matches.push({ key, dynamic: false, start, end, range: rangeFromOffsets(text, start, end) });
+    }
+  }
+  return matches;
+}
+
+function findJsxComponentKeys(text: string): TranslationKeyMatch[] {
+  const matches: TranslationKeyMatch[] = [];
+  const patterns = [
+    /<(?:Trans)\s[\s\S]*?\bi18nKey\s*=\s*(?:\{|)(['"`])([^'"`}]+)\1[^>]*>/g,
+    /<(?:FormattedMessage)\s[\s\S]*?\bid\s*=\s*(?:\{|)(['"`])([^'"`}]+)\1[^>]*>/g,
+    /<(?:FormattedMessage)\s[\s\S]*?\bdefaultMessage\s*=\s*(?:\{|)(['"`])([^'"`}]+)\1[^>]*>/g,
+    /<(?:t)\s[\s\S]*?\bmessage\s*=\s*(?:\{|)(['"`])([^'"`}]+)\1[^>]*>/g,
+    /<(?:Translate)\s[\s\S]*?\bid\s*=\s*(?:\{|)(['"`])([^'"`}]+)\1[^>]*>/g
+  ];
+  for (const pattern of patterns) {
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(text)) !== null) {
+      const key = match[2];
+      const start = match.index + match[0].indexOf(key);
+      const end = start + key.length;
+      if (/^[A-Za-z][A-Za-z0-9._-]*(?:\.[A-Za-z][A-Za-z0-9._-]*)*$/.test(key)) {
+        matches.push({ key, dynamic: false, start, end, range: rangeFromOffsets(text, start, end) });
+      }
     }
   }
   return matches;

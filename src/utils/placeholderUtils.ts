@@ -11,19 +11,27 @@ const PLACEHOLDER_PATTERNS: RegExp[] = [
   /%[sdif]/g,
   /%\{[^}]+\}/g,
   /:[a-zA-Z_][a-zA-Z0-9_]*/g,
-  /\$\{[^}]+\}/g
+  /\$\{[^}]+\}/g,
+  /\$[a-zA-Z_][a-zA-Z0-9_-]*(?:\s*\{\s*[^}]+\})?/g,
+  /\{[a-zA-Z_][a-zA-Z0-9_]*(?:\s*,\s*(?:plural|select|selectordinal|number|date|time|duration)\s*,\s*[^}]+)?\}/g,
+  /\{[a-zA-Z_][a-zA-Z0-9_]*(?:\s*,\s*(?:plural|select|selectordinal)\s*,\s*[^}]*offset\s*:\s*\d+[^}]*)\}/g
 ];
 
 export function extractPlaceholders(value: string): Set<string> {
   const placeholders = new Set<string>();
   let masked = value;
-  for (const match of value.matchAll(PLACEHOLDER_PATTERNS[0])) {
-    placeholders.add(match[0]);
-    masked = masked.replace(match[0], ' '.repeat(match[0].length));
-  }
-  for (const pattern of PLACEHOLDER_PATTERNS.slice(1)) {
+  SCAN: for (const pattern of PLACEHOLDER_PATTERNS) {
     for (const match of masked.matchAll(pattern)) {
-      placeholders.add(match[0]);
+      const token = match[0];
+      if (token.length > 500) continue;
+      let skip = false;
+      for (const existing of placeholders) {
+        if (existing.includes(token) || token.includes(existing)) skip = true;
+      }
+      if (!skip) {
+        placeholders.add(token);
+        masked = masked.replaceAll(token, ' '.repeat(token.length));
+      }
     }
   }
   return placeholders;

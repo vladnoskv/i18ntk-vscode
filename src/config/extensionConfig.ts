@@ -17,7 +17,7 @@ export async function getExtensionConfig(rootPath: string, localeDirectory: stri
     showHoverTranslations: getConfigValue('i18ntk', 'showHoverTranslations', shared.showHoverTranslations, true),
     reportFormat: enumConfigValue('i18ntk', 'reportFormat', shared.reportFormat, 'webview', ['webview', 'markdown']),
     maxScanFiles: getConfigValue('i18ntk', 'maxScanFiles', shared.maxScanFiles, 2000),
-    exclude: getConfigValue('i18ntk', 'exclude', shared.exclude, ['node_modules', '.next', 'dist', 'build', 'coverage']),
+    exclude: getConfigValue('i18ntk', 'exclude', shared.exclude, ['node_modules', '.next', 'dist', 'build', 'coverage', '.nuxt', '.output', '.astro', '.svelte-kit', '.cache', '__generated__']),
     customWrappers: getConfigValue('i18ntk', 'customWrappers', shared.customWrappers, []),
     autoTranslateProvider: enumConfigValue('i18ntk', 'autoTranslateProvider', shared.autoTranslateProvider, 'google', ['google', 'deepl', 'libretranslate']),
     autoTranslateTargets: getConfigValue('i18ntk', 'autoTranslateTargets', shared.autoTranslateTargets, []),

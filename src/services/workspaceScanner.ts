@@ -28,7 +28,7 @@ import {
 import { LocaleFileService } from './localeFileService';
 import { Logger } from './logger';
 
-const SOURCE_EXTENSIONS = new Set(['.js', '.jsx', '.ts', '.tsx', '.vue', '.svelte', '.html']);
+const SOURCE_EXTENSIONS = new Set(['.js', '.jsx', '.ts', '.tsx', '.mjs', '.mts', '.cjs', '.cts', '.vue', '.svelte', '.astro', '.mdx', '.html', '.rs']);
 const MAX_SOURCE_USAGE_SCAN_BYTES = 2 * 1024 * 1024;
 const MAX_KNOWN_KEY_LITERAL_SCAN_BYTES = 512 * 1024;
 
@@ -331,8 +331,9 @@ export class WorkspaceScanner {
 
   private calculateHealthScore(totalKeys: number, missing: number, placeholders: number, risky: number): number {
     if (totalKeys === 0) return 0;
-    const penalty = missing * 3 + placeholders * 5 + risky;
-    return Math.max(0, Math.min(100, Math.round(100 - (penalty / Math.max(totalKeys, 1)) * 10)));
+    const penalty = Math.min(missing * 3 + placeholders * 5 + risky, Math.max(totalKeys - 1, 0) * 2);
+    const raw = 100 - (penalty / totalKeys) * 40;
+    return Math.max(0, Math.min(100, Math.round(raw)));
   }
 
   private async collectAutoTranslateResiduals(rootPath: string, localeFiles: Array<{ locale: string; filePath: string; keys: string[]; keyRanges?: Record<string, TextRange> }>) {
