@@ -6,14 +6,13 @@
 
 i18ntk Workbench is the full VS Code companion to the `i18ntk` CLI. Scan locale health, validate translations, review usage, manage keys, open reports, and run Auto Translate — all inside the editor. It owns the i18ntk Activity Bar sidebar.
 
-## Latest in 1.3.0
+## Latest in 1.4.0
 
-- **JSX Component Detection**: `<Trans i18nKey>`, `<FormattedMessage id>`, `<FormattedMessage defaultMessage>`, `<t message>`, `<Translate id>` are detected as key usages
-- **ICU/Fluent Placeholder Support**: `$variable`, `{count, plural, ...}`, `{name, select, ...}` patterns detected and compared
-- **Astro + ESM Support**: `.astro`, `.mdx`, `.mjs`, `.mts`, `.cjs`, `.cts`, `.rs` file scanning
-- **Framework Activation**: activates on Next.js, Astro, Remix, Svelte, Nuxt, Gatsby configs and Cargo.toml
-- **Health Score Fix**: prevents negative scores on small key sets
-- **Document Selectors**: `astro` and `html` languages, extended glob patterns
+- **Multi-language document selectors**: Python, Go, Rust, Ruby, Java, PHP, Handlebars added to code actions, semantic tokens, completions, and document links
+- **Expanded file scanning**: `.py`, `.pyx`, `.pyi`, `.go`, `.rb`, `.java`, `.php`, `.hbs` scanned for translation keys
+- **Multi-framework wrapper patterns**: Semantic tokens, document links, and autocompletion now match `$t()`, `_()`, `__()`, `translate()` in addition to `t()` and `i18n.t()`
+- **Expanded locale auto-discovery**: `config/locales` (Rails), `assets/i18n` (Angular) added
+- **Expanded document selector glob**: `**/*.{...,py,go,rb,java,php,rs,hbs}`
 
 ## Features
 

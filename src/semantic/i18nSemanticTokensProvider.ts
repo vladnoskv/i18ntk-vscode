@@ -36,12 +36,12 @@ export class I18nSemanticTokensProvider implements vscode.DocumentSemanticTokens
     const tokensBuilder = new vscode.SemanticTokensBuilder(this.legend);
     const text = document.getText();
 
-    const wrapperPattern = /[tT]\(\s*(['"`])([^'"`]*?)\1\s*\)|i18n\.t\(\s*(['"`])([^'"`]*?)\3\s*\)/g;
+    const wrapperPattern = /[tT]\(\s*(['"`])([^'"`]*?)\1\s*\)|i18n\.t\(\s*(['"`])([^'"`]*?)\3\s*\)|\$t\(\s*(['"`])([^'"`]*?)\4\s*\)|_\(\s*(['"`])([^'"`]*?)\6\s*\)|__\(\s*(['"`])([^'"`]*?)\8\s*\)|translate\(\s*(['"`])([^'"`]*?)\10\s*\)/g;
     let match: RegExpExecArray | null;
 
     while ((match = wrapperPattern.exec(text)) !== null) {
-      const key = match[2] || match[4];
-      const quote = match[1] || match[3];
+      const key = match[2] || match[4] || match[5] || match[7] || match[9] || match[11];
+      const quote = match[1] || match[3] || match[4] || match[6] || match[8] || match[10];
       if (!key || !quote) continue;
 
       const fullMatch = match[0];

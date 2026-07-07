@@ -262,8 +262,15 @@ export function activate(context: vscode.ExtensionContext): void {
     { scheme: 'file', language: 'svelte' },
     { scheme: 'file', language: 'astro' },
     { scheme: 'file', language: 'html' },
+    { scheme: 'file', language: 'python' },
+    { scheme: 'file', language: 'go' },
+    { scheme: 'file', language: 'rust' },
+    { scheme: 'file', language: 'ruby' },
+    { scheme: 'file', language: 'java' },
+    { scheme: 'file', language: 'php' },
+    { scheme: 'file', language: 'handlebars' },
     { scheme: 'file', language: 'json' },
-    { scheme: 'file', pattern: '**/*.{ts,tsx,js,jsx,mjs,mts,cjs,cts,vue,svelte,astro,html}' }
+    { scheme: 'file', pattern: '**/*.{ts,tsx,js,jsx,mjs,mts,cjs,cts,vue,svelte,astro,html,py,go,rb,java,php,rs,hbs}' }
   ];
 
   context.subscriptions.push(

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const LOCALE_CANDIDATES = ['locales', 'locale', 'i18n', 'translations', 'public/locales', 'src/locales', 'app/i18n', 'src/lib/i18n', 'content/locales', 'messages', 'lang'];
+const LOCALE_CANDIDATES = ['locales', 'locale', 'i18n', 'translations', 'public/locales', 'src/locales', 'app/i18n', 'src/lib/i18n', 'content/locales', 'messages', 'lang', 'config/locales', 'assets/i18n', 'translations', 'locale'];
 const LOCALE_ROOT_NAMES = new Set(['locales', 'locale', 'i18n', 'translations', 'messages', 'lang']);
 const DISCOVERY_EXCLUDES = new Set(['.git', '.hg', '.svn', 'node_modules', '.next', '.nuxt', '.output', '.astro', '.svelte-kit', '.cache', '__generated__', 'dist', 'build', 'coverage', 'out', 'target']);
 const MAX_DISCOVERY_DEPTH = 5;

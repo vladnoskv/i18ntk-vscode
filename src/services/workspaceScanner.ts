@@ -28,7 +28,7 @@ import {
 import { LocaleFileService } from './localeFileService';
 import { Logger } from './logger';
 
-const SOURCE_EXTENSIONS = new Set(['.js', '.jsx', '.ts', '.tsx', '.mjs', '.mts', '.cjs', '.cts', '.vue', '.svelte', '.astro', '.mdx', '.html', '.rs']);
+const SOURCE_EXTENSIONS = new Set(['.js', '.jsx', '.ts', '.tsx', '.mjs', '.mts', '.cjs', '.cts', '.vue', '.svelte', '.astro', '.mdx', '.html', '.rs', '.py', '.pyx', '.pyi', '.go', '.rb', '.java', '.php', '.hbs']);
 const MAX_SOURCE_USAGE_SCAN_BYTES = 2 * 1024 * 1024;
 const MAX_KNOWN_KEY_LITERAL_SCAN_BYTES = 512 * 1024;
 

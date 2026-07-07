@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.0 - 2026-07-07
+
+### Added
+
+- **Python/Go/Rust/Ruby/Java/PHP/Handlebars language selectors:** Added 6 new language IDs to `documentSelector` for code actions, semantic tokens, completions, and document links.
+- **Expanded file extensions:** `.py`, `.pyx`, `.pyi`, `.go`, `.rb`, `.java`, `.php`, `.hbs` added to `SOURCE_EXTENSIONS` in `workspaceScanner.ts`.
+- **Multi-framework wrapper patterns in semantic tokens:** `wrapperPattern` now matches `$t()`, `_()`, `__()`, `translate()` in addition to `t()` and `i18n.t()`.
+- **Multi-framework wrapper patterns in document links:** Same expansion for Ctrl+Click navigation between source and locale keys.
+- **Multi-framework autocompletion trigger:** `isInTranslationCall` regex now matches `$t(`, `_(`, `__(`, `useI18n().t(`.
+- **Expanded locale discovery:** Added `config/locales` (Rails), `assets/i18n` (Angular) to `LOCALE_CANDIDATES`.
+- **Expanded document selector glob:** Added `*.{py,go,rb,java,php,rs,hbs}` to catch framework-agnostic file patterns.
+
+### Changed
+
+- **Version bumped to 1.4.0** for multi-framework language and pattern support.
+
 ## 1.3.0 - 2026-07-04
 
 ### Added

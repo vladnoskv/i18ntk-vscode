@@ -39,7 +39,7 @@ export class TranslationKeyCompletionProvider implements vscode.CompletionItemPr
       return undefined;
     }
 
-    const isInTranslationCall = /[tT]\(\s*$|[tT]ranslate\(\s*$|i18n\.t\(\s*$|i18n\.translate\(\s*$|useTranslation\(\)\.t\(\s*$/.test(linePrefix);
+    const isInTranslationCall = /[tT]\(\s*$|[tT]ranslate\(\s*$|i18n\.t\(\s*$|i18n\.translate\(\s*$|useTranslation\(\)\.t\(\s*$|\$t\(\s*$|_\s*\(\s*$|__\s*\(\s*$|useI18n\(\)\.t\(\s*$/.test(linePrefix);
     if (!isInTranslationCall) return undefined;
 
     const items: vscode.CompletionItem[] = [];
