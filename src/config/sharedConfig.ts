@@ -87,7 +87,7 @@ export async function saveSharedWorkbenchSettings(rootPath: string, data: Workbe
     : {};
   const next: SharedI18ntkConfig = {
     ...current,
-    version: stringValue(current.version) || '4.4.5',
+    version: stringValue(current.version) || '5.0.0',
     sourceLanguage: data.sourceLocale || stringValue(current.sourceLanguage) || 'en',
     i18nDir: data.localeDirectory || stringValue(current.i18nDir) || './locales',
     sourceDir: stringValue(current.sourceDir) || './src',

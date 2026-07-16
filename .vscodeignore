@@ -4,6 +4,8 @@ node_modules/**
 src/**
 test/**
 out/test/**
+out-pre-native/**
+out-native/**
 tmp-report-out/**
 **/*.map
 tsconfig.json
